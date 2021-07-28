@@ -745,7 +745,7 @@ class sSceneDatabase:
                         self.load()
                         
                     def load(self):
-                        self.bs.readShort() # ???
+                        self.bs.readShort()
                         self.bs.readUInt() # size of sTextureImage data
 
                         self.readImage()
