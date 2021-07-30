@@ -1,5 +1,6 @@
 from os import system
 from .utils import *
+from mathutils import *
 
 class sSceneDatabase:
     def __init__(self, br):
@@ -18,6 +19,7 @@ class sSceneDatabase:
         self.vertexArray = {}
         self.primitiveList = {}
         self.shape = {}
+        self.bone = {}
 
         self.shapeHeaderSignatures = []
         self.stateSignatures = []
@@ -239,8 +241,6 @@ class sSceneDatabase:
             self.bs.readUInt()
             self.sShapeHeaderInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
-            print(self.bs.tell())
-
         def readShapeSignatures(self):
             self.bs.readUInt()  # size of shape signatures
             shapeCount = self.bs.readUInt()  # count of shape signatures
@@ -350,7 +350,7 @@ class sSceneDatabase:
                     self.textureRef = None
                     self.shaderParameter0 = None
                     self.shaderParameter1 = None
-                    self.userParameter = None
+                    self.userParameter = []
 
                     self.load()
 
@@ -418,12 +418,22 @@ class sSceneDatabase:
                     self.bs.readUInt() # size of user parameters
                     userParameterCount = self.bs.readUInt() # user parameters count
 
-                    for userParameter in range(userParameterCount):
-                        self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+                    for i in range(userParameterCount):
+                        _sUserParameter = sSceneDatabase.sShapeHeader.sShape.sState.sUserParameter()
+                        _sUserParameter.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
                         self.bs.readBytes(4) # unknown 0x4
                         self.bs.readBytes(8) # zeros(?)
-                        parameter = Vector3.fromBytes(self.bs.readBytes(12))
+                        _sUserParameter.value = Vector3.fromBytes(self.bs.readBytes(12))
                         self.bs.readBytes(4) # zeros(?)
+
+                        self.userParameter.append(_sUserParameter)
+
+                class sUserParameter:
+                    def __init__(self):
+                        super().__init__()
+
+                        self.name = ""
+                        self.value = 0
 
 
             class sDisplayList:
@@ -468,7 +478,6 @@ class sSceneDatabase:
                     for blendGeometry in range(blendGeometryCount):
                         self.blendGeometry.append(self.bs.readUShort())
                     
-                    # index ?
                     self.index = self.bs.readBytes(self.bs.readUInt()) # unknown signature
 
                     self.displayListRef = self.bs.readUShort()
@@ -502,12 +511,12 @@ class sSceneDatabase:
 
                         self.readProperties()
 
-                        self.vertexArrayDic[self.vertexArray] = 0
-
                         self.bs.readUInt()
                         self.sGeometryName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
                         self.bs.readUInt()
                         self.sGeometryInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+
+                        #self.vertexArrayDic[self.vertexArray] = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray(self.bs)
 
                     def readProperties(self):
                         self.vertexDesc = self.bs.readUInt()
@@ -522,70 +531,257 @@ class sSceneDatabase:
                         if "userVertexArrayElementNumber" in self.sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
                             self.userVertexArrayElementNumber = self.bs.readUInt()
                         
-                        self.flag = self.bs.readUByte()
+                        self.flag = self.bs.readByte()
 
 
-                class sVertexArray:
-                    def __init__(self, bs, sGeometry):
-                        self.bs = bs
-                        self.sGeometry = sGeometry
+                    class sVertexArray:
+                        def __init__(self, bs, sSceneDatabase, sGeometry):
+                            self.bs = bs
+                            self.sSceneDatabase = sSceneDatabase
+                            self.sGeometry = sGeometry
 
-                        self.array = 0
+                            self.array = 0
 
-                        self.load()
+                            self.load()
 
-                    def load(self):
-                        self.bs.readUShort()
-                        self.bs.readUInt() # size of sVertexArray data
+                        def load(self):
+                            self.bs.readUShort()
+                            self.bs.readUInt() # size of sVertexArray data
 
-                        self.array = self.bs.readBytes(self.bs.readUInt())
-                        
-                        #self.bs.readUInt()
+                            self.bs.readUInt()
 
-                        #self.array = self.bs.readBytes(self.sGeometry.strideSize * count)
-                        #self.sGeometry.vertexArrayDic[self.sGeometry.vertexArray] = self.array
-                        #self.sGeometry.vertexArray = (self.sGeometry.vertexArray, self.array)
+                            if self.sGeometry.strideSize == 12:
+                                if "_sSerial::_sVertexArrayP" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayP(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 16:
+                                if "_sSerial::_sVertexArrayPC" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPC(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 20:
+                                if "_sSerial::_sVertexArrayPT" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPT(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 24:
+                                if "_sSerial::_sVertexArrayPN" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPN(self.bs)
+                                elif "_sSerial::_sVertexArrayPCT" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPCT(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 28:
+                                if "_sSerial::_sVertexArrayPNC" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNC(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 32:
+                                if "_sSerial::_sVertexArrayPNT" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNT(self.bs)
+                            
+                            elif self.sGeometry.strideSize == 36:
+                                if "_sSerial::_sVertexArrayPNCT" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT(self.bs)
+                                elif "_sSerial::_sVertexArrayPNTW2" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW2(self.bs)
 
-                    class sVertexArrayP:
-                        def __init__(self):
-                            self.positions = []
+                            elif self.sGeometry.strideSize == 40:
+                                if "_sSerial::_sVertexArrayPNTW4" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW4(self.bs)
 
-                    class sVertexArrayPN:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
+                            elif self.sGeometry.strideSize == 44:
+                                if "_sSerial::_sVertexArrayPNCT2" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT2(self.bs)
 
-                    class sVertexArrayPNC:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
-                            self.colors = []
 
-                    class sVertexArrayPNCT:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
-                            self.colors = []
-                            self.texCoords = []
+                            elif self.sGeometry.strideSize == 52:
+                                if "_sSerial::_sVertexArrayPBCT" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT(self.bs)
 
-                    class sVertexArrayPNCT2:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
-                            self.colors = []
-                            self.texCoords = []
+                            elif self.sGeometry.strideSize == 60:
+                                if "_sSerial::_sVertexArrayPBCT2" in self.sSceneDatabase._sSerial:
+                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT2(self.bs)
+                            
+                            #self.bs.readUInt()
 
-                    class sVertexArrayPNT:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
-                            self.texCoords = []
+                            #self.array = self.bs.readBytes(self.sGeometry.strideSize * count)
+                            #self.sGeometry.vertexArrayDic[self.sGeometry.vertexArray] = self.array
+                            #self.sGeometry.vertexArray = (self.sGeometry.vertexArray, self.array)
 
-                    class sVertexArrayPNTW2:
-                        def __init__(self):
-                            self.positions = []
-                            self.normals = []
-                            self.texCoords = []
+                        class sVertexArrayP:
+                            def __init__(self, bs):
+                                self.array = {"positions" : []}
+
+                                count = bs.readUInt()
+
+                                for i in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+
+
+                        class sVertexArrayPN:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": []}
+
+                                count = bs.readUInt()
+
+                                for i in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+
+
+                        class sVertexArrayPC:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "colors": []}
+
+                                count = bs.readUInt()
+
+                                for i in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+
+
+                        class sVertexArrayPT:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "texCoordsLayer1": []}
+
+                                count = bs.readUInt()
+
+                                for i in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])
+
+
+                        class sVertexArrayPNC:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "colors": []}
+
+                                count = bs.readUInt()
+
+                                for i in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+        
+
+                        class sVertexArrayPCT:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "colors": [], "texCoordsLayer1": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])
+
+
+                        class sVertexArrayPNT:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "texCoordsLayer1": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])
+
+
+                        class sVertexArrayPNCT:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "colors": [], "texCoordsLayer1": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])                        
+
+
+                        class sVertexArrayPBCT: # TO DO Binormals = long ?
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "binormals": [], "colors": [], "texCoordsLayer1": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    
+                                    """
+                                    tangent = Vector((bs.readFloat(), bs.readFloat(), bs.readFloat()))
+                                    bitangent = Vector((bs.readFloat(), bs.readFloat(), bs.readFloat()))
+                                    w = bs.readFloat()
+                                    normals = (Vector.cross(tangent, bitangent) * w).normalized()
+                                    self.array["normals"].append([normals[0], normals[1], normals[2]])
+                                    """
+
+                                    self.array["binormals"].append([bs.readBytes(28)])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])  
+
+
+                        class sVertexArrayPNCT2:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "colors": [], "texCoordsLayer1": [], "texCoordsLayer2": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])   
+                                    self.array["texCoordsLayer2"].append([bs.readFloat(), bs.readFloat()])    
+
+
+                        class sVertexArrayPBCT2: # TO DO Binormals = long ?
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "binormals": [], "colors": [], "texCoordsLayer1": [], "texCoordsLayer2": []}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    
+                                    """
+                                    tangent = Vector((bs.readFloat(), bs.readFloat(), bs.readFloat()))
+                                    bitangent = Vector((bs.readFloat(), bs.readFloat(), bs.readFloat()))
+                                    w = bs.readFloat()
+                                    normals = (Vector.cross(tangent, bitangent) * w).normalized()
+                                    self.array["normals"].append([normals[0], normals[1], normals[2]])
+                                    """
+                                    
+                                    self.array["binormals"].append([bs.readBytes(28)])
+                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])   
+                                    self.array["texCoordsLayer2"].append([bs.readFloat(), bs.readFloat()])    
+
+
+                        class sVertexArrayPNTW2:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "texCoordsLayer1": [], "boneIndices": [], "boneWeights":[]}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
+                                    self.array["boneIndices"].append(bs.readBytes(2))   
+                                    self.array["boneWeights"].append(bs.readBytes(2)) 
+
+
+                        class sVertexArrayPNTW4:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "texCoordsLayer1": [], "boneIndices": [], "boneWeights":[]}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
+                                    self.array["boneIndices"].append(bs.readBytes(4))   
+                                    self.array["boneWeights"].append(bs.readBytes(4)) 
 
 
             class sPrimitiveList:
@@ -658,7 +854,7 @@ class sSceneDatabase:
                     self.textureID = 0
                     self.textureImage = 0
 
-                    self.mipmapFileName = 0
+                    self.mipmapFileName = []
                     self.userParameter = 0
                     
                     self.load()
@@ -717,10 +913,10 @@ class sSceneDatabase:
                     self.textureID = self.bs.readByte()
                     self.textureImage = self.bs.readShort()
 
-                    # TO DO
                     self.bs.readUInt() # size of mipmap FileNames
                     mipmapFileNameCount = self.bs.readUInt() # mipmap FileNames count
-                    self.mipmapFileName = 0 
+                    for mipmapFileName in range(mipmapFileNameCount):
+                        self.mipmapFileName.append(self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")) 
 
                     # TO DO
                     if "userParameter" in self.sSceneDatabase._sSerial["_sSerial::_sTexture"]:
@@ -730,8 +926,9 @@ class sSceneDatabase:
 
 
                 class sTextureImage:
-                    def __init__(self, bs):
+                    def __init__(self, bs, sSceneDatabase):
                         self.bs = bs
+                        self.sSceneDatabase = sSceneDatabase
 
                         self.sTextureImageName = ""
                         self.sTextureImageInfoName = ""
@@ -739,6 +936,9 @@ class sSceneDatabase:
                         self.file = 0
                         self.maxMipmapLevel = 0
                         self.fileName = 0
+
+                        self.flag = 0
+
                         self.separateImageSize = 0
                         self.separateImageOffset = 0
 
@@ -755,6 +955,9 @@ class sSceneDatabase:
                         self.bs.readUInt() # fileName Size
                         self.fileName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
                         
+                        if "flag" in self.sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
+                            self.flag = self.bs.readUInt()
+
                         self.separateImageSize = self.bs.readUInt()
                         self.separateImageOffset = self.bs.readUInt()
 
@@ -771,6 +974,9 @@ class sSceneDatabase:
         def __init__(self, bs):
             self.bs = bs
 
+            self.sSkeletonName = ""
+            self.sSkeletonInfoName = ""
+
             self.boneDic = {}
             self.bone = []
             self.blendBoneNumber = 0
@@ -785,13 +991,22 @@ class sSceneDatabase:
             
             boneCount = self.bs.readUInt()
             for bone in range(boneCount):
-                self.bone.append(self.bs.readUShort)
+                self.bone.append(self.bs.readUShort())
             self.blendBoneNumber = self.bs.readUInt()
+
+            self.bs.readUInt() # size of sSkeleton name
+            self.sSkeletonName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # sSkeleton name
+            self.bs.readUInt() # size of info sSkeleton name
+            self.sSkeletonInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sSkeleton name
 
 
         class sBone:
-            def __init__(self, bs):
+            def __init__(self, bs, sSceneDatabase):
                 self.bs = bs
+                self.sSceneDatabase = sSceneDatabase
+
+                self.sBoneName = ""
+                self.sBoneInfoName = ""
 
                 self.shapeHeader = 0
                 self.parentName = 0
@@ -831,9 +1046,9 @@ class sSceneDatabase:
 
                 self.readMatrices()
 
-                self.parentIndex = self.bs.readUInt()
-                self.blendIndex = self.bs.readUInt()
-                self.shapeHeaderIndex = self.bs.readUInt()
+                self.parentIndex = self.bs.readInt()
+                self.blendIndex = self.bs.readInt()
+                self.shapeHeaderIndex = self.bs.readInt()
                 
                 self.isInstance = self.bs.readByte()
 
@@ -844,6 +1059,11 @@ class sSceneDatabase:
                 self.readUserParameters()
 
                 self.readTransformations()
+
+                self.bs.readUInt() # size of sBone name
+                self.sBoneName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # sBone name
+                self.bs.readUInt() # size of info sBone name
+                self.sBoneInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sBone name
 
             def readMatrices(self):
                 self.mtxLocal = self.bs.readBytes(48)
@@ -857,13 +1077,15 @@ class sSceneDatabase:
                     self.bs.readBytes(28) # ???
 
             def readTransformations(self):
-                self.scale = self.bs.readBytes(12)
-                self.rotation = self.bs.readBytes(12)
-                self.quaternion = self.bs.readBytes(16)
-                self.translation = self.bs.readBytes(12)
+                self.scale = Vector3.fromBytes(self.bs.readBytes(12))
+                if "rotation" in self.sSceneDatabase._sSerial["_sSerial::_sBone"]:
+                    self.rotation = Vector3.fromBytes(self.bs.readBytes(12))
+                self.quaternion = Vector4.fromBytes(self.bs.readBytes(16))
+                self.translation = Vector3.fromBytes(self.bs.readBytes(12))
 
 
 class EFO:
+    
     def __init__(self, filepath):
         efo_file = open(filepath, 'rb')
         binaryReader = BinaryReader(efo_file)
@@ -871,7 +1093,7 @@ class EFO:
         self._sSceneDatabase = sSceneDatabase(binaryReader)
         print(binaryReader.tell())
         
-        if "_sSerial::_sShapeHeader" in self._sSceneDatabase._sSerial:  # TEST
+        if "_sSerial::_sShapeHeader" in self._sSceneDatabase._sSerial:
 
             for shapeHeader in self._sSceneDatabase.shapeHeaderSignatures:
                 
@@ -900,7 +1122,7 @@ class EFO:
                             
                             if _sTexture.textureImage > 0 and _sTexture.textureImage not in self._sSceneDatabase.textureImage:
 
-                                _sTextureImage = sSceneDatabase.sShapeHeader.sShape.sTexture.sTextureImage(binaryReader)
+                                _sTextureImage = sSceneDatabase.sShapeHeader.sShape.sTexture.sTextureImage(binaryReader, self._sSceneDatabase)
                                 print(binaryReader.tell())
                                 self._sSceneDatabase.textureImage[_sTexture.textureImage] = _sTextureImage
 
@@ -917,7 +1139,7 @@ class EFO:
                             print(binaryReader.tell())
                             self._sSceneDatabase.geometry[_sDisplayList.geometry] = _sGeometry
 
-                            _sVertexArray = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sVertexArray(binaryReader, _sGeometry)
+                            _sVertexArray = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
                             print(binaryReader.tell())
                             self._sSceneDatabase.vertexArray[_sGeometry.vertexArray] = _sVertexArray
 
@@ -929,11 +1151,18 @@ class EFO:
                         binaryReader.readBytes(binaryReader.readUInt())
                         binaryReader.readBytes(binaryReader.readUInt())
 
+                        # TEST
+                        for blendGeometry in _sDisplayList.blendGeometry:
+
+                            _sGeometry = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry(binaryReader, self._sSceneDatabase)
+                            print(binaryReader.tell())
+
+                            _sVertexArray = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
+                            print(binaryReader.tell())
+
+
                         print(binaryReader.tell())
 
-                        #if _sDisplayList.geometry != self._sSceneDatabase.geometrySignatures[0] and self._sSceneDatabase.geometrySignatures[0] not in self._sSceneDatabase.geometry:
-                        # TO FIX
-                        #if _sDisplayList.geometry == min(self._sSceneDatabase.geometrySignatures) and _sShape.displayList == min(self._sSceneDatabase.displayListSignatures):
                         if _sShape.displayList != self._sSceneDatabase.displayListSignatures[0] and self._sSceneDatabase.displayListSignatures[0] not in self._sSceneDatabase.displayList:
 
                             _sDisplayList = sSceneDatabase.sShapeHeader.sShape.sDisplayList(binaryReader)
@@ -945,8 +1174,8 @@ class EFO:
                                 _sGeometry = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry(binaryReader, self._sSceneDatabase)
                                 print(binaryReader.tell())
                                 self._sSceneDatabase.geometry[_sDisplayList.geometry] = _sGeometry
-
-                                _sVertexArray = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sVertexArray(binaryReader, _sGeometry)
+                                
+                                _sVertexArray = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
                                 print(binaryReader.tell())
                                 self._sSceneDatabase.vertexArray[_sGeometry.vertexArray] = _sVertexArray
 
@@ -961,5 +1190,45 @@ class EFO:
                             print(binaryReader.tell())
             
                 print(binaryReader.tell())
+
+            print(binaryReader.tell())
+
+            # TEST for characters
+            for stateSignature in self._sSceneDatabase.stateSignatures:
+
+                if stateSignature not in self._sSceneDatabase.state:
+
+                    _sState = sSceneDatabase.sShapeHeader.sShape.sState(binaryReader)
+                    print(binaryReader.tell())
+                    self._sSceneDatabase.state[_sShape.state] = _sState
+
+                    for texture in _sState.texture:
+                        
+                        if texture not in self._sSceneDatabase.texture:
+                            
+                            _sTexture = sSceneDatabase.sShapeHeader.sShape.sTexture(binaryReader, self._sSceneDatabase)
+                            print(binaryReader.tell())
+                            self._sSceneDatabase.texture[texture] = _sTexture
+
+                            if _sTexture.textureImage > 0 and _sTexture.textureImage not in self._sSceneDatabase.textureImage:
+
+                                _sTextureImage = sSceneDatabase.sShapeHeader.sShape.sTexture.sTextureImage(binaryReader, self._sSceneDatabase)
+                                print(binaryReader.tell())
+                                self._sSceneDatabase.textureImage[_sTexture.textureImage] = _sTextureImage
+
+            print(binaryReader.tell())
+
+            for skeleton in self._sSceneDatabase.skeletonSignatures:
+
+                _sSkeleton = sSceneDatabase.sSkeleton(binaryReader)
+                print(binaryReader.tell())
+                self._sSceneDatabase.skeleton[skeleton] = _sSkeleton
+
+                for bone in _sSkeleton.bone:
+
+                    _sSbone = sSceneDatabase.sSkeleton.sBone(binaryReader, self._sSceneDatabase)
+                    print(binaryReader.tell())
+                    self._sSceneDatabase.bone[bone] = _sSbone
+                    _sSkeleton.boneDic[bone] = _sSbone
 
             print(binaryReader.tell())

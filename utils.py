@@ -24,18 +24,6 @@ class BinaryReader:
     def read(self, size):
         return self.data.read(size)
 
-    def readInt(self):
-        return struct.unpack(self.endian + "i", self.read(4))[0]
-
-    def readUInt(self):
-        return struct.unpack(self.endian + "I", self.read(4))[0]
-
-    def readShort(self):
-        return struct.unpack(self.endian + "h", self.read(2))[0]
-
-    def readUShort(self):
-        return struct.unpack(self.endian + "H", self.read(2))[0]
-
     def readChar(self):
         return struct.unpack(self.endian + "c", self.read(1))[0]
 
@@ -45,6 +33,24 @@ class BinaryReader:
     def readUByte(self):
         return struct.unpack(self.endian + "B", self.read(1))[0]
 
+    def readShort(self):
+        return struct.unpack(self.endian + "h", self.read(2))[0]
+
+    def readUShort(self):
+        return struct.unpack(self.endian + "H", self.read(2))[0]
+
+    def readInt(self):
+        return struct.unpack(self.endian + "i", self.read(4))[0]
+
+    def readUInt(self):
+        return struct.unpack(self.endian + "I", self.read(4))[0]
+
+    def readLong(self):
+        return struct.unpack(self.endian + "l", self.read(8))[0]
+
+    def readULong(self):
+        return struct.unpack(self.endian + "L", self.read(8))[0]
+
     def readBytes(self, size):
         ret = bytearray()
         for i in range(size):
@@ -53,6 +59,9 @@ class BinaryReader:
 
     def readFloat(self):
         return struct.unpack(self.endian + "f", self.read(4))[0]
+
+    def readDouble(self):
+        return struct.unpack(self.endian + "d", self.read(8))[0]
 
     def readString(self, encoding="utf-8"):
         bytes = []
@@ -104,18 +113,26 @@ class Vector3:
         x, y, z = struct.unpack("fff", data)
         return x, y, z
 
-def StripToTriangle(triangleStripList, number):
+def StripToTriangle(triangleStripList):
     faces = []
-    for i in range(2, number):
-        if i % 2 == 0:
-            a = triangleStripList[i - 2]
-            b = triangleStripList[i - 1]
-            c = triangleStripList[i]
+    cte = 0
+    for i in range(2, len(triangleStripList)):
+        if triangleStripList[i] == 65535 or triangleStripList[i - 1] == 65535 or triangleStripList[i - 2] == 65535:
+            if i % 2 == 0:
+                cte = -1
+            else:
+                cte = 0
+            pass
         else:
-            a = triangleStripList[i - 1]
-            b = triangleStripList[i - 2]
-            c = triangleStripList[i]
+            if (i + cte) % 2 == 0:
+                a = triangleStripList[i - 2]
+                b = triangleStripList[i - 1]
+                c = triangleStripList[i]
+            else:
+                a = triangleStripList[i - 1]
+                b = triangleStripList[i - 2]
+                c = triangleStripList[i]
 
-        if a != b and b != c and c != a:
-            faces.append([a, b, c])
+            if a != b and b != c and c != a:
+                faces.append([a, b, c])
     return faces
