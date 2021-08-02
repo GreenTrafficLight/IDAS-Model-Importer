@@ -11,30 +11,7 @@ from .utils import *
 from .blender_functions import *
 from io import BytesIO
 
-def build(efo):
-
-    """
-    for shapeHeaderSignature in efo._sSceneDatabase.shapeHeader.keys():
-
-        shapeHeader = efo._sSceneDatabase.shapeHeader[shapeHeaderSignature]
-
-        bpy.ops.object.empty_add(type='PLAIN_AXES')
-        empty = bpy.context.active_object
-        empty.empty_display_size = 0.1
-        empty.name = shapeHeader.sShapeHeaderName
-
-        for shapeSignature in shapeHeader.shape:
-
-            shape = efo._sSceneDatabase.shape[shapeSignature]
-
-
-            construct_mesh(efo._sSceneDatabase, shape,  empty)
-
-            
-            get_materials(efo._sSceneDatabase, shape)
-
-            pass
-    """
+def build_hierarchy(efo, texture_dir):
 
     for skeletonSignature in efo._sSceneDatabase.skeleton.keys():
 
@@ -45,39 +22,79 @@ def build(efo):
         #skeleton_empty.empty_display_size = 0.1
         #skeleton_empty.name = skeleton.sSkeletonInfoName
 
-        bone_empty_list = []
+        bpy.ops.object.add(type="ARMATURE")
+        ob = bpy.context.object
+        ob.rotation_euler = ( radians(90), 0, 0 )
+        ob.name = skeleton.sSkeletonName
+        
+        amt = ob.data
+        amt.name = skeleton.sSkeletonName
+
+        
+        """
+        for boneSignature in skeleton.bone:
+
+            if bone.vertexBlendTarget == -1:
+
+                pass
+        """
+        empty_list = []
 
         for boneSignature in skeleton.bone:
 
-                bone = efo._sSceneDatabase.bone[boneSignature]
+            bone = efo._sSceneDatabase.bone[boneSignature]
 
-                bpy.ops.object.empty_add(type='PLAIN_AXES')
-                bone_empty = bpy.context.active_object
-                bone_empty.empty_display_size = 0
-                bone_empty.location = bone.translation
+            #if bone.vertexBlendTarget == 0:
+
+            bpy.ops.object.empty_add(type='PLAIN_AXES', location=bone.translation, scale=bone.scale)
+            empty = bpy.context.active_object
+            empty.empty_display_size = 0
+            empty.name = bone.sBoneName
+            
+            if bone.rotation != 0:
+                empty.rotation_euler = bone.rotation
+
+            if bone.parentIndex == -1:
+                #bone_empty.rotation_euler = ( radians(90), 0, 0 )
+                empty.parent = ob
                 
-                if bone.parentIndex == -1:
-                    bone_empty.rotation_euler = ( radians(90), 0, 0 )
+            if bone.parentName != "":
                 
-                bone_empty.name = bone.sBoneName
+                empty.parent = empty_list[bone.parentIndex]
+
+            if bone.shapeHeader != 0:
                 
+                shapeHeader = efo._sSceneDatabase.shapeHeader[bone.shapeHeader]
+
+                for shapeSignature in shapeHeader.shape:
+
+                    shape = efo._sSceneDatabase.shape[shapeSignature]
+
+                    build_mesh(efo._sSceneDatabase, shape,  empty, texture_dir)
+
+            empty_list.append(empty)
+            """
+            elif bone.vertexBlendTarget == -1:
+
+                bpy.context.view_layer.objects.active = ob
+                bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+                obArm = bpy.context.active_object #get the armature object
+                ebs = obArm.data.edit_bones
+                eb = ebs.new(bone.sBoneName)
+                eb.head = (0, 1, 1) # if the head and tail are the same, the bone is deleted
+                eb.tail = (0, 1, 2)    # upon returning to object mode
+                bpy.ops.object.mode_set(mode='OBJECT')
+
                 if bone.parentName != "":
-                    bone_empty.parent = bone_empty_list[bone.parentIndex]
-
-                if bone.shapeHeader != 0:
-                    
-                    shapeHeader = efo._sSceneDatabase.shapeHeader[bone.shapeHeader]
-
-                    for shapeSignature in shapeHeader.shape:
-
-                        shape = efo._sSceneDatabase.shape[shapeSignature]
-
-                        construct_mesh(efo._sSceneDatabase, shape,  bone_empty)
-
-                bone_empty_list.append(bone_empty)
                 
+                    eb.parent = bone_empty_list[bone.parentIndex]
+
+                bone_empty_list.append(ebs)
+            """
+
+
  
-def construct_mesh(sSceneDatabase, shape, shapeHeader):
+def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir):
     mesh = bpy.data.meshes.new(shape.sShapeName)
     obj = bpy.data.objects.new(shape.sShapeName, mesh)
 
@@ -89,11 +106,8 @@ def construct_mesh(sSceneDatabase, shape, shapeHeader):
     obj.parent = shapeHeader
 
     displayList = sSceneDatabase.displayList[shape.displayList]
-
     geometry = sSceneDatabase.geometry[displayList.geometry]
-    
     primitiveList = sSceneDatabase.primitiveList[displayList.primitiveList[0]] # TEST
-
     vertexArray = sSceneDatabase.vertexArray[geometry.vertexArray]
 
     if displayList.displayListRef != 0:
@@ -111,6 +125,11 @@ def construct_mesh(sSceneDatabase, shape, shapeHeader):
     facesList = []
     normals = []
 
+    if "texCoordsLayer1" in vertexArray.array.array:
+        uv_layer1 = bm.loops.layers.uv.new()
+    if "texCoordsLayer2" in vertexArray.array.array:
+        uv_layer2 = bm.loops.layers.uv.new()
+
     # Set vertices
     for j in range(primitiveList.startNumber, primitiveList.endNumber + 1):
         vertex = bm.verts.new(vertexArray.array.array["positions"][j]) # array.array TO CHANGE
@@ -122,7 +141,7 @@ def construct_mesh(sSceneDatabase, shape, shapeHeader):
         vertexList[j] = vertex 
     
     # Set faces
-    for j in range(primitiveList.indexNumber):
+    for j in range(len(faces)):
         try:
             face = bm.faces.new([vertexList[faces[j][0]], vertexList[faces[j][1]], vertexList[faces[j][2]]])
             face.smooth = True
@@ -146,6 +165,22 @@ def construct_mesh(sSceneDatabase, shape, shapeHeader):
         facesList.append([face, [vertexList[faces[j][0]], vertexList[faces[j][1]], vertexList[faces[j][2]]]])
     """
 
+    # Set uv
+    for f in bm.faces:
+        if "texCoordsLayer1" in vertexArray.array.array:
+            for l in f.loops:
+                l[uv_layer1].uv = [vertexArray.array.array["texCoordsLayer1"][l.vert.index][0], 1 - vertexArray.array.array["texCoordsLayer1"][l.vert.index][1]]
+        if "texCoordsLayer2" in vertexArray.array.array:
+            for l in f.loops:
+                l[uv_layer2].uv = [vertexArray.array.array["texCoordsLayer1"][l.vert.index][0], 1 - vertexArray.array.array["texCoordsLayer1"][l.vert.index][1]]
+
+    # Set colors
+    if "colors" in vertexArray.array.array:
+        color_layer = bm.loops.layers.color.new("Color")
+        for f in bm.faces:
+            for l in f.loops:
+                l[color_layer] = vertexArray.array.array["colors"][l.vert.index]
+
     bm.to_mesh(mesh)
     bm.free()
 
@@ -155,25 +190,37 @@ def construct_mesh(sSceneDatabase, shape, shapeHeader):
     if normals != []:
         mesh.normals_split_custom_set_from_vertices(normals)
 
-    material = get_materials(sSceneDatabase, shape)
+    material = get_materials(sSceneDatabase, shape, texture_dir)
 
     mesh.materials.append(material)
 
 
-def get_materials(sSceneDatabase, shape):
+def get_materials(sSceneDatabase, shape, texture_dir):
 
     state = sSceneDatabase.state[shape.state]
     
     material = bpy.data.materials.get(state.sStateName)
     if not material:
         material = bpy.data.materials.new(state.sStateName)
-    
-    
-    material.use_nodes = True
-    nodes = material.node_tree.nodes
 
-    #texture = sSceneDatabase.texture[state.texture[0]]
-    #textureImage = sSceneDatabase.textureImage[texture.textureImage]
+    material.use_nodes = True
+    
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+
+    bsdf =  material.node_tree.nodes["Principled BSDF"]
+
+    if state.texture != []:
+        texture = sSceneDatabase.texture[state.texture[0]]
+        textureImage = sSceneDatabase.textureImage[texture.textureImage]
+
+        texture_file = f"{texture_dir}{texture.fileName}"
+
+        if os.path.isfile(texture_file):
+            texture_image = nodes.new(type='ShaderNodeTexImage')
+            texture_image.image = bpy.data.images.load(texture_file)
+
+            material.node_tree.links.new(bsdf.inputs['Base Color'], texture_image.outputs['Color'])
 
 
     """
@@ -189,15 +236,41 @@ def get_materials(sSceneDatabase, shape):
     return material
 
 
+def extract_textures(efo, texture_dir):
+
+    for textureImageSignature, textureImage in efo._sSceneDatabase.textureImage.items():
+        if textureImageSignature > 0 and not os.path.isfile(texture_dir + textureImage.fileName):
+            f = open(texture_dir + textureImage.fileName, "wb")
+            f.write(textureImage.file)
+            f.close()
+
+
 
 
             
-def main(filepath, clear_scene, import_character):
+def main(filepath, clear_scene):
     if clear_scene == True:
         clearScene()
     efo = EFO(filepath)
-    #buildModel(efo, import_character)
-    build(efo)
+    efoName = filepath.split("\\")[-1]
+
+    head = os.path.split(filepath)[0]
+    tail = os.path.split(filepath)[1]
+    
+    texture = head + "\\" + "texture.efo"
+    if os.path.exists(texture):
+        texture_efo = EFO(texture)
+        texture_dir = filepath.replace(efoName, "textures\\")
+        if not os.path.exists(texture_dir):
+            os.mkdir(texture_dir)
+        extract_textures(texture_efo, texture_dir)
+    else:
+        texture_dir = head + "\\" + efoName[:-4] + "_" + "textures\\"
+        if not os.path.exists(texture_dir):
+            os.mkdir(texture_dir)
+        extract_textures(efo, texture_dir)
+
+    build_hierarchy(efo, texture_dir)
     return {'FINISHED'}
 
 if __name__ == '__main__':

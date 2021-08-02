@@ -12,6 +12,7 @@ bl_info = {
 	"category": "Import-Export"}
 
 import bpy
+import os
 
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
@@ -31,27 +32,19 @@ class ImportEFO(Operator, ImportHelper):
     clear_scene: BoolProperty(
         name="Clear scene",
         description="Example Tooltip",
-        default=True,
-    )
-
-    import_character: BoolProperty(
-        name="Import character",
-        description="Check this in order to import character properly",
         default=False,
     )
 
-    type: EnumProperty(
-        name="Example Enum",
-        description="Choose between two items",
-        items=(
-            ('OPT_A', "First Option", "Description one"),
-        ),
-        default='OPT_A',
+    import_textures: BoolProperty(
+        name="Import textures",
+        description="Example Tooltip",
+        default=True,
     )
 
     def execute(self, context):
         from . import  import_efo
-        return import_efo.main(self.filepath, self.clear_scene, self.import_character)
+        import_efo.main(self.filepath, self.clear_scene)
+        return {'FINISHED'}
 
 
 # Only needed if you want to add into a dynamic menu

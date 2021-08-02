@@ -76,7 +76,14 @@ class BinaryReader:
         return bytes.decode(encoding)
 
     def bytesToString(self, byteArray, encoding="utf-8"):
-        return byteArray.decode(encoding)
+        try:
+            return byteArray.decode(encoding)
+        except:
+            string = ""
+            for b in byteArray:
+                if b < 127:
+                    string += chr(b)
+            return string
 
 
 class Matrix4x4:
