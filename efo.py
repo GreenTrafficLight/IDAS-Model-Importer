@@ -6,6 +6,9 @@ class sSceneDatabase:
     def __init__(self, br):
         self.br = br
         
+        self.sSceneDatabaseName = ""
+        self.sSceneDatabaseNameInfoName = ""
+
         self._sSerial = {}
 
         self.shapeHeader = {}
@@ -28,6 +31,7 @@ class sSceneDatabase:
         self.textureSignatures = []
         self.skeletonSignatures = []
         self.textureImageSignatures = []
+
 
         self.load()
 
@@ -124,9 +128,9 @@ class sSceneDatabase:
             self.br.bytesToString(self.br.readBytes(self.br.readUShort()))  # textbl path
 
         self.br.readInt()  # size of sSceneDatabase name
-        self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # sSceneDatabase name
+        self.sSceneDatabaseName = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # sSceneDatabase name
         self.br.readInt()  # size of info sSceneDatabase name
-        self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # info sSceneDatabase name
+        self.sSceneDatabaseInfoName = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # info sSceneDatabase name
 
     def get_sSerial(self): # Read the informations at the start
         while True:
@@ -202,6 +206,7 @@ class sSceneDatabase:
 
 
     class sShapeHeader:
+        
         def __init__(self, bs):
             self.bs = bs
 
@@ -308,6 +313,7 @@ class sSceneDatabase:
 
 
             class sState:
+                
                 def __init__(self, bs):
                     self.bs = bs
 
@@ -347,7 +353,9 @@ class sSceneDatabase:
                     self.textureRef = None
                     self.shaderParameter0 = None
                     self.shaderParameter1 = None
-                    self.userParameter = []
+                    
+                    #self.userParameter = []
+                    self.userParameter = {}
 
                     self.load()
 
@@ -415,6 +423,7 @@ class sSceneDatabase:
                     self.bs.readUInt() # size of user parameters
                     userParameterCount = self.bs.readUInt() # user parameters count
 
+                    """
                     for i in range(userParameterCount):
                         _sUserParameter = sSceneDatabase.sShapeHeader.sShape.sState.sUserParameter()
                         _sUserParameter.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
@@ -424,6 +433,15 @@ class sSceneDatabase:
                         self.bs.readBytes(4) # zeros(?)
 
                         self.userParameter.append(_sUserParameter)
+                    """
+                    for i in range(userParameterCount):
+                        userParameterName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+                        self.bs.readBytes(4) # unknown 0x4
+                        self.bs.readBytes(8) # zeros(?)
+                        userParameterValue = Vector3.fromBytes(self.bs.readBytes(12))
+                        self.bs.readBytes(4) # zeros(?)
+                        
+                        self.userParameter[userParameterName] = userParameterValue
 
                 class sUserParameter:
                     def __init__(self):
@@ -547,54 +565,53 @@ class sSceneDatabase:
 
                             self.bs.readUInt()
 
-                            if self.sGeometry.strideSize == 12: 
-                                if "_sSerial::_sVertexArrayP" in self.sSceneDatabase._sSerial: # vertexDesc == 1
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayP(self.bs)
+                            if self.sGeometry.vertexDesc == 1:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayP(self.bs)
                             
-                            elif self.sGeometry.strideSize == 16: 
-                                if "_sSerial::_sVertexArrayPC" in self.sSceneDatabase._sSerial: # vertexDesc == 9
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPC(self.bs)
-                            
-                            elif self.sGeometry.strideSize == 20:
-                                if "_sSerial::_sVertexArrayPT" in self.sSceneDatabase._sSerial: # vertexDesc == 33
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPT(self.bs)
-                            
-                            elif self.sGeometry.strideSize == 24:
-                                if "_sSerial::_sVertexArrayPN" in self.sSceneDatabase._sSerial: # vertexDesc == 3
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPN(self.bs)
-                                elif "_sSerial::_sVertexArrayPCT" in self.sSceneDatabase._sSerial: # vertexDesc == 41
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPCT(self.bs)
-                            
-                            elif self.sGeometry.strideSize == 28: 
-                                if "_sSerial::_sVertexArrayPNC" in self.sSceneDatabase._sSerial: # vertexDesc == 11
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNC(self.bs)
-                            
-                            elif self.sGeometry.strideSize == 32: 
-                                if "_sSerial::_sVertexArrayPNT" in self.sSceneDatabase._sSerial: # vertexDesc == 35
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNT(self.bs)
-                            
-                            elif self.sGeometry.strideSize == 36: 
-                                if "_sSerial::_sVertexArrayPNCT" in self.sSceneDatabase._sSerial: # vertexDesc == 43
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT(self.bs)
-                                elif "_sSerial::_sVertexArrayPNTW2" in self.sSceneDatabase._sSerial: # vertexDesc == 1571
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW2(self.bs)
+                            elif self.sGeometry.vertexDesc == 3:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPN(self.bs)
 
-                            elif self.sGeometry.strideSize == 40:
-                                if "_sSerial::_sVertexArrayPNTW4" in self.sSceneDatabase._sSerial: # vertexDesc == 7715
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW4(self.bs)
+                            elif self.sGeometry.vertexDesc == 9: 
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPC(self.bs)
+                            
+                            elif self.sGeometry.vertexDesc == 11:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNC(self.bs)
 
-                            elif self.sGeometry.strideSize == 44:
-                                if "_sSerial::_sVertexArrayPNCT2" in self.sSceneDatabase._sSerial: # vertexDesc == 107
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT2(self.bs)
+                            elif self.sGeometry.vertexDesc == 33:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPT(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 35: 
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNT(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 41:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPCT(self.bs)
+                                            
+                            elif self.sGeometry.vertexDesc == 43:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 47:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 107:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNCT2(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 111:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT2(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 1539:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNW2(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 1571:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW2(self.bs)
+
+                            elif self.sGeometry.vertexDesc == 7715:
+                                self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPNTW4(self.bs)
 
 
-                            elif self.sGeometry.strideSize == 52:
-                                if "_sSerial::_sVertexArrayPBCT" in self.sSceneDatabase._sSerial: # vertexDesc == 47
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT(self.bs)
 
-                            elif self.sGeometry.strideSize == 60:
-                                if "_sSerial::_sVertexArrayPBCT2" in self.sSceneDatabase._sSerial: # vertexDesc == 111
-                                    self.array = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray.sVertexArrayPBCT2(self.bs)
+
+
+
                             
                             #self.bs.readUInt()
 
@@ -631,7 +648,7 @@ class sSceneDatabase:
 
                                 for i in range(count):
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
 
 
                         class sVertexArrayPT:
@@ -654,7 +671,7 @@ class sSceneDatabase:
                                 for i in range(count):
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
         
 
                         class sVertexArrayPCT:
@@ -665,7 +682,7 @@ class sSceneDatabase:
 
                                 for vertex in range(count):
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])
 
 
@@ -690,8 +707,21 @@ class sSceneDatabase:
                                 for vertex in range(count):
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])                        
+
+
+                        class sVertexArrayPNW2:
+                            def __init__(self, bs):
+                                self.array = {"positions" : [], "normals": [], "boneIndices": [], "boneWeights":[]}
+
+                                count = bs.readUInt()
+
+                                for vertex in range(count):
+                                    self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
+                                    self.array["boneIndices"].append(bs.readBytes(2))   
+                                    self.array["boneWeights"].append(bs.readBytes(2)) 
 
 
                         class sVertexArrayPBCT: # TO DO Binormals = long ?
@@ -712,7 +742,7 @@ class sSceneDatabase:
                                     """
 
                                     self.array["bitangents"].append([bs.readBytes(28)])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])  
 
 
@@ -725,7 +755,7 @@ class sSceneDatabase:
                                 for vertex in range(count):
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])   
                                     self.array["texCoordsLayer2"].append([bs.readFloat(), bs.readFloat()])    
 
@@ -748,7 +778,7 @@ class sSceneDatabase:
                                     """
                                     
                                     self.array["bitangents"].append([bs.readBytes(28)])
-                                    self.array["colors"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["colors"].append([bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255, bs.readUByte() / 255])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()])   
                                     self.array["texCoordsLayer2"].append([bs.readFloat(), bs.readFloat()])    
 
@@ -760,11 +790,20 @@ class sSceneDatabase:
                                 count = bs.readUInt()
 
                                 for vertex in range(count):
+                                    boneIndices = []
+                                    boneWeights = []
+
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
-                                    self.array["boneIndices"].append(bs.readBytes(2))   
-                                    self.array["boneWeights"].append(bs.readBytes(2)) 
+
+                                    boneWeights.append(bs.readUByte() / 255)
+                                    boneIndices.append(bs.readUByte())       
+                                    boneWeights.append(bs.readUByte() / 255)
+                                    boneIndices.append(bs.readUByte())
+
+                                    self.array["boneWeights"].append(boneWeights)
+                                    self.array["boneIndices"].append(boneIndices)
 
 
                         class sVertexArrayPNTW4:
@@ -777,8 +816,8 @@ class sSceneDatabase:
                                     self.array["positions"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
-                                    self.array["boneIndices"].append(bs.readBytes(4))   
-                                    self.array["boneWeights"].append(bs.readBytes(4)) 
+                                    self.array["boneIndices"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
+                                    self.array["boneWeights"].append([bs.readUByte(), bs.readUByte(), bs.readUByte(), bs.readUByte()])
 
 
             class sPrimitiveList:
@@ -1063,8 +1102,8 @@ class sSceneDatabase:
                 self.sBoneInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sBone name
 
             def readMatrices(self):
-                self.mtxLocal = self.bs.readBytes(48)
-                self.mtxDefault = self.bs.readBytes(48)
+                self.mtxLocal = Matrix4x3.fromBytes(self.bs.readBytes(48))
+                self.mtxDefault = Matrix4x3.fromBytes(self.bs.readBytes(48))
 
             def readUserParameters(self):
                 self.bs.readUInt() # size of user parameters
