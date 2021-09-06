@@ -32,7 +32,7 @@ class ImportEFO(Operator, ImportHelper):
     clear_scene: BoolProperty(
         name="Clear scene",
         description="Example Tooltip",
-        default=True,
+        default=False,
     )
 
     import_textures: BoolProperty(

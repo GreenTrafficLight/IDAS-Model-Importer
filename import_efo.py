@@ -52,8 +52,6 @@ def build_hierarchy(efo, texture_dir):
             mat = Matrix.Translation(sBone.translation) @ mat
             bone.matrix = mat
 
-            #bone.translate(Vector(sBone.translation))
-
             if sBone.parentIndex != -1:
 
                 parent = efo._sSceneDatabase.bone[sBone.parent]
@@ -62,11 +60,6 @@ def build_hierarchy(efo, texture_dir):
                 bone.matrix = amt.edit_bones[parent.sBoneName].matrix @ bone.matrix
 
                 bone.head = bone.matrix.translation
-                
-                #sBone.mtxLocal = parent.mtxLocal @ sBone.mtxLocal # 
-                #bone.head = Vector(sBone.mtxLocal.translation) #
-                #if parentBone.head != bone.head:
-                    #bone.tail = amt.edit_bones[parent.sBoneName].head
 
         bones = amt.edit_bones
         for boneSignature in skeleton.bone:
@@ -168,19 +161,6 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
 
         vertex.index = j
         
-        """
-        if "boneIndices" in vertexArray.array.array:
-            for k, vg in enumerate(vertexArray.array.array["boneIndices"][j]):
-                vg_name = bone_mapping[vg]
-                if not vg_name in obj.vertex_groups:
-                    group = obj.vertex_groups.new(name=vg_name)
-                else:
-                    group = obj.vertex_groups[vg_name]
-                weight = vertexArray.array.array["boneWeights"][j][k]
-                if weight > 0.0:
-                    group.add([vertex.index], weight, 'ADD' )
-        """
-
         vertexList[j] = vertex 
         
     # Set faces
@@ -240,7 +220,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
                     group = obj.vertex_groups[vg_name]
                 weight = vertexArray.array.array["boneWeights"][i][k]
                 if weight > 0.0:
-                    group.add([i - primitiveList.startNumber], weight, 'REPLACE')
+                    group.add([i - primitiveList.startNumber], 1.0, 'REPLACE')
     """
 
     # Set normals
@@ -259,6 +239,10 @@ def get_materials(sSceneDatabase, shape, texture_dir):
     state = sSceneDatabase.state[shape.state]
     
     material = bpy.data.materials.get(state.sStateName)
+
+    print(state.sStateName)
+    print(state.fillType)
+    print(state.opacity)
     
     if not material:
         material = bpy.data.materials.new(state.sStateName)
@@ -275,9 +259,6 @@ def get_materials(sSceneDatabase, shape, texture_dir):
             bsdf.inputs['Base Color'].default_value = (state.userParameter["teaSA_color"][0], state.userParameter["teaSA_color"][1], state.userParameter["teaSA_color"][2], 1)
 
         if state.texture != []:
-
-            #transparent = nodes.new("ShaderNodeBsdfTransparent")
-            #alphaMix = nodes.new("ShaderNodeMixShader")
             
             for texture in state.texture:
 
@@ -290,6 +271,10 @@ def get_materials(sSceneDatabase, shape, texture_dir):
                     #texture_file = bpy.data.images.load(texture_filepath)
                     texture_file = image_utils.load_image(texture_filepath, check_existing=True)
 
+                    #print(sTexture.fileName)
+                    #print(sTexture.format)
+                    #print(sTexture.alphaMode)
+
                     if sTexture.textureType == 1: # Diffuse
                         
                         diffuseTextureImage_node = nodes.new(type='ShaderNodeTexImage')
@@ -298,22 +283,14 @@ def get_materials(sSceneDatabase, shape, texture_dir):
                         links.new(bsdf.inputs['Base Color'], diffuseTextureImage_node.outputs['Color'])
                         links.new(bsdf.inputs['Alpha'], diffuseTextureImage_node.outputs['Alpha'])
 
-                        """
-                        if "teaSA_dif" in state.userParameter:
+                        if "teaSA_color" in state.userParameter:
 
                             mixRGB_node = nodes.new(type="ShaderNodeMixRGB")
                             mixRGB_node.blend_type = 'MULTIPLY'
                             links.new(bsdf.inputs['Base Color'], mixRGB_node.outputs['Color'])
                             mixRGB_node.inputs['Color1'].default_value = (state.userParameter["teaSA_color"][0], state.userParameter["teaSA_color"][1], state.userParameter["teaSA_color"][2], 1)                    
+                            mixRGB_node.inputs['Fac'].default_value = 1.0
                             links.new(mixRGB_node.inputs['Color2'], diffuseTextureImage_node.outputs['Color'])
-                        """
-
-                        """
-                        links.new(diffuseTextureImage_node.outputs['Alpha'], alphaMix.inputs[0])
-                        links.new(bsdf.outputs['BSDF'], alphaMix.inputs[2])
-                        links.new(transparent.outputs['BSDF'], alphaMix.inputs[1])
-                        links.new(alphaMix.outputs['Shader'], output.inputs['Surface'])
-                        """
 
                     elif sTexture.textureType == 3: # Normal
 
@@ -334,31 +311,8 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
                     else:
                         
-                        print(sTexture.textureType)
+                        #print(sTexture.textureType)
                         pass
-    
-        """
-        for userParameter in state.userParameter:
-            #print(userParameter.name)
-
-            if userParameter.name == "teaSA_color":
-                bsdf.inputs['Base Color'].default_value = (userParameter.value[0], userParameter.value[1], userParameter.value[2], 1)
-           
-            elif userParameter.name == "teaSA_dif":            
-                
-                #mixRGB_node = nodes.new(type="ShaderNodeMixRGB")
-                #mixRGB_node.blend_type = 'MULTIPLY'
-                #links.new(bsdf.inputs['Base Color'], mixRGB_node.outputs['Color'])
-                #mixRGB_node.inputs['Color1'].default_value = (userParameter.value[0], userParameter.value[1], userParameter.value[2], 1)
-                pass
-                
-            elif userParameter.name == "teaSA_spec":           
-                pass
-            elif userParameter.name == "teaSA_fresnel":
-                pass
-            elif userParameter.name == "teaSA_shadowColor":
-                pass
-        """
 
     # TEST
     elif material:
@@ -369,13 +323,9 @@ def get_materials(sSceneDatabase, shape, texture_dir):
         node = nodes.get("Image Texture", None)
         
         if node is None and state.texture != []:
-
-            print("None")
             
             bsdf =  material.node_tree.nodes["Principled BSDF"]
             output = material.node_tree.nodes["Material Output"]
-            #transparent = material.node_tree.nodes["Transparent BSDF"]
-            #alphaMix = material.node_tree.nodes["Mix Shader"]
 
             for texture in state.texture:
 
@@ -387,6 +337,10 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
                     texture_file = image_utils.load_image(texture_filepath, check_existing=True)
 
+                    #print(sTexture.fileName)
+                    #print(sTexture.format)
+                    #print(sTexture.alphaMode)
+
                     if sTexture.textureType == 1: # Diffuse
                         
                         diffuseTextureImage_node = nodes.new(type='ShaderNodeTexImage')
@@ -394,23 +348,15 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
                         links.new(bsdf.inputs['Base Color'], diffuseTextureImage_node.outputs['Color'])
                         links.new(bsdf.inputs['Alpha'], diffuseTextureImage_node.outputs['Alpha'])
-                        
-                        """
-                        if "teaSA_dif" in state.userParameter:
+
+                        if "teaSA_color" in state.userParameter:
 
                             mixRGB_node = nodes.new(type="ShaderNodeMixRGB")
                             mixRGB_node.blend_type = 'MULTIPLY'
                             links.new(bsdf.inputs['Base Color'], mixRGB_node.outputs['Color'])
-                            mixRGB_node.inputs['Color1'].default_value = bsdf.inputs['Base Color'].default_value                   
+                            mixRGB_node.inputs['Color1'].default_value = bsdf.inputs['Base Color'].default_value
+                            mixRGB_node.inputs['Fac'].default_value = 1.0                    
                             links.new(mixRGB_node.inputs['Color2'], diffuseTextureImage_node.outputs['Color'])
-                        """
-
-                        """
-                        links.new(diffuseTextureImage_node.outputs['Alpha'], alphaMix.inputs[0])
-                        links.new(bsdf.outputs['BSDF'], alphaMix.inputs[2])
-                        links.new(transparent.outputs['BSDF'], alphaMix.inputs[1])
-                        links.new(alphaMix.outputs['Shader'], output.inputs['Surface'])
-                        """
 
                     elif sTexture.textureType == 3: # Normal
                         normalTextureImage_node = nodes.new("ShaderNodeTexImage")
@@ -430,9 +376,17 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
                     else:
                         
-                        print(sTexture.textureType)
+                        #print(sTexture.textureType)
                         pass
 
+    if state.fillType == 0:
+        material.blend_method = 'OPAQUE'
+    elif state.fillType == 1:
+        material.blend_method = 'CLIP'
+    elif state.fillType == 2:
+        material.blend_method = 'BLEND'
+    else:
+        material.blend_method = 'OPAQUE'
 
     return material
 
@@ -440,12 +394,13 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 def extract_textures(efo, texture_dir):
 
     for textureImageSignature, textureImage in efo._sSceneDatabase.textureImage.items():
-        if textureImageSignature > 0 and not os.path.isfile(texture_dir + textureImage.fileName):
-            if not os.path.exists(texture_dir):
-                os.mkdir(texture_dir)
-            f = open(texture_dir + textureImage.fileName, "wb")
-            f.write(textureImage.file)
-            f.close()
+            #if textureImageSignature > 0 and not os.path.isfile(texture_dir + textureImage.fileName):
+            if textureImageSignature > 0 and textureImage.fileName != None and not os.path.isfile(texture_dir + textureImage.fileName):
+                if not os.path.exists(texture_dir):
+                    os.mkdir(texture_dir)
+                f = open(texture_dir + textureImage.fileName, "wb")
+                f.write(textureImage.file)
+                f.close()
 
             
 def main(filepath, clear_scene):
@@ -461,15 +416,11 @@ def main(filepath, clear_scene):
     if os.path.exists(texture):
         texture_efo = EFO(texture)
         texture_dir = filepath.replace(efoName, "textures\\")
-        #if not os.path.exists(texture_dir):
-            #os.mkdir(texture_dir)
         extract_textures(texture_efo, texture_dir)
         extract_textures(efo, texture_dir)
     else:
         
         texture_dir = head + "\\" + efoName[:-4] + "_" + "textures\\"
-        #if not os.path.exists(texture_dir):
-            #os.mkdir(texture_dir)
         extract_textures(efo, texture_dir)
 
     build_hierarchy(efo, texture_dir)
