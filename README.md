@@ -27,6 +27,7 @@ The gallery doesn't use rotations. In the game, they turn according to where the
 
 (To most likely to least likely)
 
+* Add automatic reposition for mesh with locators (i.e : Mufflers and drivers)
 * Fix Miki bone weights (let's be honest, nobody like him anyways lol)
 * Add support for other paths
 * Add support for binormals and tangents for the courses (This would at the top, but I don't know if Blender support the assignement of binormals and tangents)
