@@ -22,7 +22,7 @@ In order to port the gallery and the trees correctly, you will need the folder n
 ## TO DO (not interested in the moment)
 
 * Add support for the animations of characters (.edo)
-* Rework the shaders
+* Rework the shaders and materials
 * Make a import all .efo for the cars (?)
 * Add support for binormals and tangents for the course
 
