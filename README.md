@@ -45,7 +45,7 @@ The gallery doesn't use rotations. In the game, they turn according to where the
 * Sayuki2.efo is the same model as Sayuki.efo
 * Gallery of Dry (Summer) and Rain (Summer) need to be scaled to with a factor of 4.5 (Select all the objets from the gallery parent and then [scale them by using the individual origin option](https://www.youtube.com/watch?v=Q_EsYIJy-vA&t=89s))
 * AE86T2_Window_genuine_00.efo has broken normals, which is probably normal since you can't see it due to shader used in the game
-* If you import a map, you will see it will have black thingy on some part, this is normal because of the alpha channel (i.e : Nagao)
+* If you import a map, you will see it will have weird black thingy on some part, this is normal because of the alpha channel (i.e : Nagao)
 * (to add)
 
 ## Codes that helped me
