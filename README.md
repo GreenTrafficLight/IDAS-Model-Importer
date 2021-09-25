@@ -24,11 +24,12 @@ In order to port the gallery and the trees correctly, you will need the folder n
 * Make a import all .efo for the cars (?)
 * Add support for binormals and tangents for the course
 
-## List of models with problems
+## Errors
 
 * Sayuki2.efo is the same model as Sayuki.efo
-* Gallery of Dry (Summer) and Ran (Summer) need to be scaled to with a factor of 4.5 (
+* Gallery of Dry (Summer) and Rain (Summer) need to be scaled to with a factor of 4.5 (
 * AE86T2_Window_genuine_00.efo has broken normals, which is probably normal since you can't see it due to shader used in the game
+* If you import a map, you will see it will have black thingy on some part, this is normal because of the alpha channel (i.e : Nagao)
 * (to add)
 
 ## Codes that helped me
