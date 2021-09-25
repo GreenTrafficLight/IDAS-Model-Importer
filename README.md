@@ -21,6 +21,8 @@ In order to port the gallery and the trees correctly, you will need the folder n
 
 ## OTHERS
 
+**IMPORTING A MAP TAKE A LOT OF MEMORY (up to 3GB depending on the map)**
+
 The gallery doesn't use rotations. In the game, they turn according to where the camera is.
 
 ## TO DO (not interested in the moment)
