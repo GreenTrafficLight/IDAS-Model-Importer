@@ -4,6 +4,8 @@
 
 A Blender addon 2.8+ to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8). This addon can be also used to import trees and spectators (.pa8)
 
+P.S : This is a script that is focused in importing the models like in **CAR**, **CHARACTERS** and **COURSE**. I haven't done a lot of testing in the .efo that are present in the **ACROBATA** and others folders.
+
 ## NOTES
 
 To get the correct materials of a car, you will to import a .efo from the folder **COLORS** first.
@@ -21,9 +23,9 @@ In order to port the gallery and the trees correctly, you will need the folder n
 
 ## OTHERS
 
-**IMPORTING A MAP TAKE A LOT OF MEMORY (up to 3GB depending on the map)**
-
-The gallery doesn't use rotations. In the game, they turn according to where the camera is.
+* **IMPORTING A MAP TAKE A LOT OF MEMORY (up to 1-2GB depending on the map)**
+* The gallery doesn't use rotations. In the game, they turn according to where the camera is.
+* For the characters, there isn't any bones for the mouths and hands, the game use different models for the expressions and gestures. However, the expressions doesn't have any UV so that's why there is only one face textured for the characters. I don't know how they did it.
 
 ## TO DO (not interested in the moment)
 
