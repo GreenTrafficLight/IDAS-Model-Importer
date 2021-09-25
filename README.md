@@ -1,5 +1,7 @@
 # efo_BlenderAddons
 
+![Akina Lake](https://i.imgur.com/9hStcZR.png)
+
 A Blender addon 2.8+ to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8).
 
 ## NOTES
@@ -35,6 +37,7 @@ In order to port the gallery and the trees correctly, you will need the folder n
 ## Codes that helped me
 
 [DGIorio Blender addons](https://drive.google.com/drive/folders/10DGQFPF6aeco2tUxp6MBfSidR-8lhNxe)
+
 
 
 
