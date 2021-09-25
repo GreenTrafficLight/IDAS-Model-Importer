@@ -6,10 +6,9 @@ class sTexture(sShape):
 
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sTextureName = ""
-        self.sTextureInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.alphaRef = 0
         
@@ -49,20 +48,20 @@ class sTexture(sShape):
         self.mipmapFileName = []
         self.userParameter = 0
         
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readShort()
         self.bs.readUInt() # size of sTexture data
 
-        self.readTextureProperties()
+        self.readTextureProperties(sSceneDatabase)
 
         self.bs.readUInt() 
-        self.sTextureName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sTextureInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
-    def readTextureProperties(self):
+    def readTextureProperties(self, sSceneDatabase):
 
         self.alphaRef = self.bs.readUByte()
         
@@ -84,7 +83,7 @@ class sTexture(sShape):
         
         self.anisoNumber = self.bs.readUByte()
 
-        if "preserveFormat" in self.sSceneDatabase._sSerial["_sSerial::_sTexture"]:
+        if "preserveFormat" in sSceneDatabase._sSerial["_sSerial::_sTexture"]:
             self.preserveFormat = self.bs.readUByte()
         
         self.lodBias = self.bs.readUInt()
@@ -93,15 +92,15 @@ class sTexture(sShape):
         self.fileName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         
         
-        if "plugName" in self.sSceneDatabase._sSerial["_sSerial::_sTexture"]:
+        if "plugName" in sSceneDatabase._sSerial["_sSerial::_sTexture"]:
             self.bs.readUInt() # plugName Size
             self.plugName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
         self.bs.readUInt() # normalMapCompressMode Size
         self.normalMapCompressMode = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         
-        self.uvScale = self.bs.readBytes(8)
-        self.uvOffset = self.bs.readBytes(8)
+        self.uvScale = (self.bs.readFloat() , self.bs.readFloat())
+        self.uvOffset = (self.bs.readFloat() , self.bs.readFloat())
         self.uvSetIndex = self.bs.readByte()
         
         self.textureType = self.bs.readByte()
@@ -114,7 +113,7 @@ class sTexture(sShape):
             self.mipmapFileName.append(self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")) 
 
         # TO DO
-        if "userParameter" in self.sSceneDatabase._sSerial["_sSerial::_sTexture"]:
+        if "userParameter" in sSceneDatabase._sSerial["_sSerial::_sTexture"]:
             self.bs.readUInt() # size of user parameters
             userParameterCount = self.bs.readUInt() # user parameters count
             self.userParameter = 0 

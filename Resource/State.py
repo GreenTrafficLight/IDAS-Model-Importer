@@ -6,10 +6,9 @@ class sState(sShape):
    
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sStateName = ""
-        self.sStateInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.fillType = 0
         self.alphaRef = 0
@@ -48,13 +47,13 @@ class sState(sShape):
         #self.userParameter = []
         self.userParameter = {}
 
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readUShort()  # unknown 0x2
         self.bs.readUInt()  # size of sState
 
-        self.readShaderProperties()
+        self.readShaderProperties(sSceneDatabase)
 
         self.bs.readUInt() # size of shader name
         self.shaderName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
@@ -69,22 +68,22 @@ class sState(sShape):
         self.readUserParameters()
 
         self.bs.readUInt() # size of sState name
-        self.sStateName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # material name
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # material name
         self.bs.readUInt() # size of info sState name
-        self.sStateInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info material name
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info material name
 
-    def readShaderProperties(self):
+    def readShaderProperties(self, sSceneDatabase):
 
         self.fillType = self.bs.readByte()
         self.alphaRef = self.bs.readByte()
         
-        if "depthTest" in self.sSceneDatabase._sSerial["_sSerial::_sState"]:
+        if "depthTest" in sSceneDatabase._sSerial["_sSerial::_sState"]:
             self.depthTest = self.bs.readByte()
-        if "depthBias" in self.sSceneDatabase._sSerial["_sSerial::_sState"]:
+        if "depthBias" in sSceneDatabase._sSerial["_sSerial::_sState"]:
             self.depthBias = self.bs.readByte()
-        if "depthBiasRate" in self.sSceneDatabase._sSerial["_sSerial::_sState"]:
+        if "depthBiasRate" in sSceneDatabase._sSerial["_sSerial::_sState"]:
             self.depthBiasRate = self.bs.readFloat()
-        if "depthBiasSlope" in self.sSceneDatabase._sSerial["_sSerial::_sState"]:
+        if "depthBiasSlope" in sSceneDatabase._sSerial["_sSerial::_sState"]:
             self.depthBiasSlope = self.bs.readFloat()
         
         self.cullMode = self.bs.readByte()
@@ -103,7 +102,7 @@ class sState(sShape):
         self.specular = self.bs.readFloat()
         self.emission = self.bs.readFloat()
 
-        if "constant" in self.sSceneDatabase._sSerial["_sSerial::_sState"]:
+        if "constant" in sSceneDatabase._sSerial["_sSerial::_sState"]:
             self.constant = self.bs.readFloat()       
 
         self.shaderDesc = self.bs.readUInt()

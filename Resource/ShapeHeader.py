@@ -6,10 +6,9 @@ class sShapeHeader(sSceneDatabase):
     
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sShapeHeaderName = ""
-        self.sShapeHeaderInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.flag = 0
         
@@ -25,9 +24,9 @@ class sShapeHeader(sSceneDatabase):
         self.stateNameList = []
         self.textureNameList = []
 
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readUShort()  # unknown 0x2
         self.bs.readUInt()  # size of shape
         
@@ -36,19 +35,19 @@ class sShapeHeader(sSceneDatabase):
         self.readShapeSignatures()
         self.readBoundingBox()
 
-        if "sortGroup" in self.sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
+        if "sortGroup" in sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
             self.sortGroup = self.bs.readShort()
 
-        if "stateNameList" in self.sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
+        if "stateNameList" in sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
             self.readStateNameList()
         
-        if "textureNameList" in self.sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
+        if "textureNameList" in sSceneDatabase._sSerial["_sSerial::_sShapeHeader"]:
             self.readTextureNameList()
 
         self.bs.readUInt()
-        self.sShapeHeaderName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sShapeHeaderInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
     def readShapeSignatures(self):
         self.bs.readUInt()  # size of shape signatures

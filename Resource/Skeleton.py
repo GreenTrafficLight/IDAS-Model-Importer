@@ -5,8 +5,8 @@ class sSkeleton:
     def __init__(self, bs):
         self.bs = bs
 
-        self.sSkeletonName = ""
-        self.sSkeletonInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.boneDic = {}
         self.bone = []
@@ -26,6 +26,6 @@ class sSkeleton:
         self.blendBoneNumber = self.bs.readUInt()
 
         self.bs.readUInt() # size of sSkeleton name
-        self.sSkeletonName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # sSkeleton name
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # sSkeleton name
         self.bs.readUInt() # size of info sSkeleton name
-        self.sSkeletonInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sSkeleton name
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sSkeleton name

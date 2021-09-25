@@ -6,10 +6,9 @@ class sTextureImage(sTexture):
     
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sTextureImageName = ""
-        self.sTextureImageInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.file = 0
         self.maxMipmapLevel = 0
@@ -20,9 +19,9 @@ class sTextureImage(sTexture):
         self.separateImageSize = 0
         self.separateImageOffset = 0
 
-        self.load()
+        self.load(sSceneDatabase)
         
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readShort()
         self.bs.readUInt() # size of sTextureImage data
 
@@ -30,22 +29,22 @@ class sTextureImage(sTexture):
 
         self.maxMipmapLevel = self.bs.readByte()
 
-        if "fileName" in self.sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
+        if "fileName" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.bs.readUInt() # fileName Size
             self.fileName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         
-        if "flag" in self.sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
+        if "flag" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.flag = self.bs.readUInt()
 
-        if "separateImageSize" in self.sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
+        if "separateImageSize" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.separateImageSize = self.bs.readUInt()
-        if "separateImageOffset" in self.sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
+        if "separateImageOffset" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.separateImageOffset = self.bs.readUInt()
 
         self.bs.readUInt() 
-        self.sTextureImageName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sTextureImageInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
     def readImage(self):
         self.file = self.bs.readBytes(self.bs.readUInt())

@@ -30,3 +30,17 @@ class Matrix4x3:
         matrix[2] = struct.unpack("ffff", data[32:48])
 
         return matrix
+
+class Matrix3x3:
+    def __init__(self, matrix=((0.0, 0.0, 0.0),
+                               (0.0, 0.0, 0.0),
+                               (0.0, 0.0, 0.0))):
+        self.matrix = matrix
+
+    def fromBytes(data):
+        matrix = Matrix.Identity(3)
+        matrix[0] = struct.unpack("fff", data[0:12])
+        matrix[1] = struct.unpack("fff", data[12:24])
+        matrix[2] = struct.unpack("fff", data[24:36])
+
+        return matrix

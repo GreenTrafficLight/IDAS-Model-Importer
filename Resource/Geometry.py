@@ -6,10 +6,9 @@ class sGeometry(sDisplayList):
 
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sGeometryName = ""
-        self.sGeometryInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.vertexArrayDic = {}
 
@@ -22,43 +21,42 @@ class sGeometry(sDisplayList):
         self.userVertexArrayElementNumber = 0
         self.flag = 0
 
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readUShort()
         self.bs.readUInt() # size of sGeometry data
 
-        self.readProperties()
+        self.readProperties(sSceneDatabase)
 
         self.bs.readUInt()
-        self.sGeometryName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sGeometryInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
         #self.vertexArrayDic[self.vertexArray] = sSceneDatabase.sShapeHeader.sShape.sDisplayList.sGeometry.sVertexArray(self.bs)
 
-    def readProperties(self):
+    def readProperties(self, sSceneDatabase):
         self.vertexDesc = self.bs.readUInt()
         self.vertexNumber = self.bs.readUInt()
         self.vertexSize = self.bs.readUInt()
         self.strideSize = self.bs.readUInt()
         self.vertexArray = self.bs.readUShort()
 
-        if "userVertexArray" in self.sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
+        if "userVertexArray" in sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
             self.userVertexArray = self.bs.readUShort()
 
-        if "userVertexArrayElementNumber" in self.sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
+        if "userVertexArrayElementNumber" in sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
             self.userVertexArrayElementNumber = self.bs.readUInt()
         
-        if "flag" in self.sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
+        if "flag" in sSceneDatabase._sSerial["_sSerial::_sGeometry"]:
             self.flag = self.bs.readByte()
 
 
     class sVertexArray:
 
-        def __init__(self, bs, sSceneDatabase, sGeometry):
+        def __init__(self, bs, sGeometry):
             self.bs = bs
-            self.sSceneDatabase = sSceneDatabase
             self.sGeometry = sGeometry
 
             self.array = 0
@@ -234,7 +232,7 @@ class sGeometry(sDisplayList):
                     self.array["normals"].append([bs.readFloat(), bs.readFloat(), bs.readFloat()])
                     self.array["boneWeights"].append([bs.readUByte() / 255])
                     self.array["boneIndices"].append([bs.readUByte()])
-                    self.array["boneWeights"][vertex].append(bs.readUByte() / 255)
+                    self.array["boneWeights"][vertex].insert(0, bs.readUByte() / 255)
                     self.array["boneIndices"][vertex].append(bs.readUByte())
 
 
@@ -310,9 +308,10 @@ class sGeometry(sDisplayList):
                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
                     self.array["boneWeights"].append([bs.readUByte() / 255])
                     self.array["boneIndices"].append([bs.readUByte()])
-                    self.array["boneWeights"][vertex].append(bs.readUByte() / 255)
+                    self.array["boneWeights"][vertex].insert(0, bs.readUByte() / 255)
                     self.array["boneIndices"][vertex].append(bs.readUByte())
 
+        # TO DO
         class sVertexArrayPNTW4:
             def __init__(self, bs):
                 self.array = {"positions" : [], "normals": [], "texCoordsLayer1": [], "boneIndices": [], "boneWeights":[]}
@@ -325,9 +324,9 @@ class sGeometry(sDisplayList):
                     self.array["texCoordsLayer1"].append([bs.readFloat(), bs.readFloat()]) 
                     self.array["boneWeights"].append([bs.readUByte() / 255])
                     self.array["boneIndices"].append([bs.readUByte()])
-                    self.array["boneWeights"][vertex].append(bs.readUByte() / 255)
+                    self.array["boneWeights"][vertex].insert(0, bs.readUByte() / 255)
                     self.array["boneIndices"][vertex].append(bs.readUByte())
-                    self.array["boneWeights"][vertex].append(bs.readUByte() / 255)
+                    self.array["boneWeights"][vertex].insert(3, bs.readUByte() / 255)
                     self.array["boneIndices"][vertex].append(bs.readUByte())
-                    self.array["boneWeights"][vertex].append(bs.readUByte() / 255)
+                    self.array["boneWeights"][vertex].insert(2, bs.readUByte() / 255)
                     self.array["boneIndices"][vertex].append(bs.readUByte())

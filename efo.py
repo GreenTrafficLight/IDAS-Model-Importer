@@ -63,7 +63,7 @@ class EFO:
                             print(binaryReader.tell())
                             self._sSceneDatabase.geometry[_sDisplayList.geometry] = _sGeometry
 
-                            _sVertexArray = sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
+                            _sVertexArray = sGeometry.sVertexArray(binaryReader, _sGeometry)
                             print(binaryReader.tell())
                             self._sSceneDatabase.vertexArray[_sGeometry.vertexArray] = _sVertexArray
 
@@ -80,9 +80,11 @@ class EFO:
 
                             _sGeometry = sGeometry(binaryReader, self._sSceneDatabase)
                             print(binaryReader.tell())
+                            _sDisplayList.blendGeometry[blendGeometry] = _sGeometry
 
-                            _sVertexArray = sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
+                            _sVertexArray = sGeometry.sVertexArray(binaryReader, _sGeometry)
                             print(binaryReader.tell())
+                            self._sSceneDatabase.vertexArray[_sGeometry.vertexArray] = _sVertexArray
 
 
                         print(binaryReader.tell())
@@ -99,7 +101,7 @@ class EFO:
                                 print(binaryReader.tell())
                                 self._sSceneDatabase.geometry[_sDisplayList.geometry] = _sGeometry
                                 
-                                _sVertexArray = sGeometry.sVertexArray(binaryReader, self._sSceneDatabase, _sGeometry)
+                                _sVertexArray = sGeometry.sVertexArray(binaryReader, _sGeometry)
                                 print(binaryReader.tell())
                                 self._sSceneDatabase.vertexArray[_sGeometry.vertexArray] = _sVertexArray
 

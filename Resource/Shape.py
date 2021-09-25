@@ -8,8 +8,8 @@ class sShape(sShapeHeader):
         self.bs = bs
         self.sSceneDatabase = sSceneDatabase
 
-        self.sShapeName = ""
-        self.sShapeInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.state = 0
         self.displayList = 0
@@ -18,26 +18,26 @@ class sShape(sShapeHeader):
         self.BBoxCenter = 0
         self.BBoxSize = 0
 
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readUShort()
         self.bs.readUInt() # size of sShape
 
         self.readSignatures()
-        self.readBoundingBox()
+        self.readBoundingBox(sSceneDatabase)
 
         self.bs.readUInt()
-        self.sShapeName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sShapeInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
     def readSignatures(self):
         self.state = self.bs.readShort()
         self.displayList = self.bs.readShort()
 
-    def readBoundingBox(self):
-        if "BSphere" in self.sSceneDatabase._sSerial["_sSerial::_sShape"] and "BBoxCenter" in self.sSceneDatabase._sSerial["_sSerial::_sShape"] and "BBoxSize" in self.sSceneDatabase._sSerial["_sSerial::_sShape"]:
+    def readBoundingBox(self, sSceneDatabase):
+        if "BSphere" in sSceneDatabase._sSerial["_sSerial::_sShape"] and "BBoxCenter" in sSceneDatabase._sSerial["_sSerial::_sShape"] and "BBoxSize" in sSceneDatabase._sSerial["_sSerial::_sShape"]:
             self.BSphere = Vector4.fromBytes(self.bs.readBytes(16))
             self.BBoxCenter = Vector3.fromBytes(self.bs.readBytes(12))
             self.BBoxSize = Vector3.fromBytes(self.bs.readBytes(12))
@@ -46,7 +46,6 @@ class sShape(sShapeHeader):
 
         def __init__(self, bs, sSceneDatabase):
             self.bs = bs
-            self.sSceneDatabase = sSceneDatabase
 
             self.primitiveType = 0
             self.primitiveNumber = 0
@@ -56,9 +55,9 @@ class sShape(sShapeHeader):
             self.endNumber = 0
             self.vertexNumber = 0
 
-            self.load()
+            self.load(sSceneDatabase)
 
-        def load(self):
+        def load(self, sSceneDatabase):
             self.bs.readShort() # ???
             self.bs.readUInt() # size of sPrimitiveList data
             
@@ -68,7 +67,7 @@ class sShape(sShapeHeader):
             self.indexNumber = self.bs.readUInt()
             self.startNumber = self.bs.readUInt()
             
-            if "endNumber" in self.sSceneDatabase._sSerial["_sSerial::_sPrimitiveList"]:
+            if "endNumber" in sSceneDatabase._sSerial["_sSerial::_sPrimitiveList"]:
                 self.endNumber = self.bs.readUInt()
             
             self.vertexNumber = self.bs.readUInt()

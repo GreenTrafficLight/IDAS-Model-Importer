@@ -6,32 +6,31 @@ class sDisplayList(sShape):
 
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
-        self.sDisplayListName = ""
-        self.sDisplayListInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self.geometry = None
         self.primitiveList = []
-        self.blendGeometry = []
+        self.blendGeometry = {}
         self.index = None
         self.displayListRef = None
         self.polygonNumber = None
 
-        self.load()
+        self.load(sSceneDatabase)
 
-    def load(self):
+    def load(self, sSceneDatabase):
         self.bs.readShort() # ???
         self.bs.readUInt() # size of sDisplayList data
 
-        self.readProperties()
+        self.readProperties(sSceneDatabase)
 
         self.bs.readUInt()
-        self.sDisplayListName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
         self.bs.readUInt()
-        self.sDisplayListInfoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
 
-    def readProperties(self):
+    def readProperties(self, sSceneDatabase):
         self.geometry = self.bs.readUShort()
 
         # primitiveList
@@ -44,11 +43,11 @@ class sDisplayList(sShape):
         blendGeometrySize = self.bs.readUInt()
         blendGeometryCount = self.bs.readUInt()
         for blendGeometry in range(blendGeometryCount):
-            self.blendGeometry.append(self.bs.readUShort())
+            self.blendGeometry[self.bs.readUShort()] = None
         
         self.index = self.bs.readBytes(self.bs.readUInt()) # unknown signature
 
         self.displayListRef = self.bs.readUShort()
 
-        if "polygonNumber" in self.sSceneDatabase._sSerial["_sSerial::_sDisplayList"]:
+        if "polygonNumber" in sSceneDatabase._sSerial["_sSerial::_sDisplayList"]:
             self.polygonNumber = self.bs.readUInt()

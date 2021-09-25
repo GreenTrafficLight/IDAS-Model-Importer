@@ -5,8 +5,8 @@ class sSceneDatabase:
     def __init__(self, br):
         self.br = br
         
-        self.sSceneDatabaseName = ""
-        self.sSceneDatabaseNameInfoName = ""
+        self.name = ""
+        self.infoName = ""
 
         self._sSerial = {}
 
@@ -135,9 +135,9 @@ class sSceneDatabase:
                 self.br.bytesToString(self.br.readBytes(self.br.readUShort()))  # textbl path
 
         self.br.readInt()  # size of sSceneDatabase name
-        self.sSceneDatabaseName = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # sSceneDatabase name
+        self.name = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # sSceneDatabase name
         self.br.readInt()  # size of info sSceneDatabase name
-        self.sSceneDatabaseInfoName = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # info sSceneDatabase name
+        self.infoName = self.br.bytesToString(self.br.readBytes(self.br.readShort()))  # info sSceneDatabase name
 
     def get_sSerial(self): # Read the informations at the start
         while True:
