@@ -13,13 +13,13 @@ To get the correct materials of a car, you will to import a .efo from the folder
 In order to port the gallery and the trees correctly, you will need the folder named **path**. The folders need to be like it was originally in the game folder. 
 
 * For the trees :
-  * /(name of the course)/efo
-  * /(name of the course)/path
+  * (your folder)/(name of the course)/efo
+  * (your folder)/(name of the course)/path
   
 * For the gallery :
-   * /common/
-   * /(name of the course)/efo
-   * /(name of the course)/path
+   * (your folder)/common/
+   * (your folder)/(name of the course)/efo
+   * (your folder)/(name of the course)/path
 
 ## OTHERS
 
