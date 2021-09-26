@@ -96,7 +96,7 @@ def build_hierarchy(efo, texture_dir, filename):
 
             bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation, scale=dummy.scale)
             empty = bpy.context.active_object
-            empty.empty_display_size = 0.5
+            empty.empty_display_size = 0.05
             empty.name = dummy.name
 
             empty.matrix_local = dummy.mtxLocal
@@ -413,7 +413,7 @@ def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
 
         bpy.ops.object.empty_add(type='PLAIN_AXES')
         a_lod_empty = bpy.context.active_object
-        a_lod_empty.empty_display_size = 0.5
+        a_lod_empty.empty_display_size = 0.05
         a_lod_empty.name = "a"
         a_lod_empty.parent = path
         lod_chosen = "a"
@@ -422,7 +422,7 @@ def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
 
         bpy.ops.object.empty_add(type='PLAIN_AXES')
         b_lod_empty = bpy.context.active_object
-        b_lod_empty.empty_display_size = 0.5
+        b_lod_empty.empty_display_size = 0.05
         b_lod_empty.name = "b"
         b_lod_empty.parent = path
         lod_chosen = "b"
@@ -431,7 +431,7 @@ def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
 
         bpy.ops.object.empty_add(type='PLAIN_AXES')
         c_lod_empty = bpy.context.active_object
-        c_lod_empty.empty_display_size = 0.5
+        c_lod_empty.empty_display_size = 0.05
         c_lod_empty.name = "c"
         c_lod_empty.parent = path
         lod_chosen = "c"
