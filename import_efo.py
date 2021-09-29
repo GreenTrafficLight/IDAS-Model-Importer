@@ -94,7 +94,11 @@ def build_hierarchy(efo, texture_dir, filename):
 
             dummy = efo._sSceneDatabase.bone[boneSignature]
 
-            bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation, scale=dummy.scale)
+            if bpy.app.version >= (2, 90, 0):
+                bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation, scale=dummy.scale)
+            else:
+                bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation)
+
             empty = bpy.context.active_object
             empty.empty_display_size = 0.05
             empty.name = dummy.name
@@ -128,10 +132,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
     mesh = bpy.data.meshes.new(shape.name)
     obj = bpy.data.objects.new(shape.name, mesh)
 
-    if bpy.app.version >= (2, 80, 0):
-        shapeHeader.users_collection[0].objects.link(obj)
-    else:
-        shapeHeader.users_collection[0].objects.link(obj)
+    shapeHeader.users_collection[0].objects.link(obj)
 
     modifier = obj.modifiers.new(armature.name, type="ARMATURE")
     modifier.object = bpy.data.objects[armature.name]
@@ -230,10 +231,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
         mesh = bpy.data.meshes.new(blendGeometry.name)
         obj = bpy.data.objects.new(blendGeometry.name, mesh)
 
-        if bpy.app.version >= (2, 80, 0):
-            shapeHeader.users_collection[0].objects.link(obj)
-        else:
-            shapeHeader.users_collection[0].objects.link(obj)
+        shapeHeader.users_collection[0].objects.link(obj)
 
         modifier = obj.modifiers.new(armature.name, type="ARMATURE")
         modifier.object = bpy.data.objects[armature.name]
@@ -296,7 +294,8 @@ def get_materials(sSceneDatabase, shape, texture_dir):
             bsdf.inputs['Base Color'].default_value = (state.userParameter["teaSA_color"][0], state.userParameter["teaSA_color"][1], state.userParameter["teaSA_color"][2], 1)
 
         bsdf.inputs['Specular'].default_value = state.specular
-        bsdf.inputs['Emission Strength'].default_value = state.emission
+        if bpy.app.version >= (2, 92, 0):
+            bsdf.inputs['Emission Strength'].default_value = state.emission
 
         if state.texture != []:
             
