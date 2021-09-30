@@ -179,8 +179,6 @@ class EFO:
         else:
             
             if self._sSceneDatabase.textureImageSignatures != [] and self._sSceneDatabase.textureSignatures != [] :
-
-                print("test")
                 
                 if self._sSceneDatabase.textureImageSignatures[0] < self._sSceneDatabase.textureSignatures[0]:
 

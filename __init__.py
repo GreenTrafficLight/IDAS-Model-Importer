@@ -12,7 +12,6 @@ bl_info = {
 	"category": "Import-Export"}
 
 import bpy
-import os
 
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
@@ -27,8 +26,6 @@ class ImportEFO(Operator, ImportHelper):
     filename_ext = ".efo"
     filter_glob: StringProperty(default="*.efo", options={'HIDDEN'}, maxlen=255,)
 
-    # List of operator properties, the attributes will be assigned
-    # to the class instance from the operator settings before calling.
     clear_scene: BoolProperty(
         name="Clear scene",
         description="Clear everything from the scene",
@@ -77,8 +74,6 @@ class ImportEFO(Operator, ImportHelper):
         import_efo.main(self.filepath, self.clear_scene, self.import_textures, self.import_trees, self.import_gallery)
         return {'FINISHED'}
 
-
-# Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
     self.layout.operator(ImportEFO.bl_idname, text="Initial D Arcade Stage Model (.efo)")
 
