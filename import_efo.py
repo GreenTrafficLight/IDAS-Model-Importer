@@ -682,8 +682,6 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
             pa = PA(path_dir + path_gallery)
             import_gallery_path(pa, os.path.splitext(path_gallery)[0], gallery_meshes)
 
-        #import_gallery = False
-
     return {'FINISHED'}
 
 
