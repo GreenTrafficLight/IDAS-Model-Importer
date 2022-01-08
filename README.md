@@ -2,7 +2,7 @@
 
 ![Akina Lake](https://i.imgur.com/9hStcZR.png)
 
-A Blender addon 2.8+ to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8). This addon can be also used to import trees and spectators (.pa8)
+A Blender addon 2.8+ (<3.0) to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8). This addon can be also used to import trees and spectators (.pa8)
 
 P.S : This is a script that is focused in importing the models like in **CAR**, **CHARACTERS** and **COURSE**. I haven't done a lot of testing in the .efo that are present in the **ACROBATA** and others folders.
 
