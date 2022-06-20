@@ -141,63 +141,9 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
     else:
         faces = np.frombuffer(displayList.index[4:], dtype=np.ushort).tolist()[primitiveList.indexStart:]
     
-    if shape.name == "shadow_WIN_sashShape":
-        print("test")
-
     faces = faces[:primitiveList.indexNumber]
     faces = StripToTriangle(faces)
 
-    if shape.name == "shadow_WIN_sashShape":
-        pass
-        """
-        del faces[::1]
-
-        faces.append([263, 271, 260]) # 0
-        faces.append([260, 263, 259]) # 1
-        faces.append([263, 259, 262]) # 2
-        faces.append([262, 263, 265]) # 3
-        faces.append([265, 262, 264]) # 4
-        faces.append([265, 263, 272]) # 5
-        faces.append([263, 272, 271]) # 6
-        faces.append([271, 260, 270]) # 7
-        faces.append([269, 270, 257]) # 8
-        faces.append([257, 269, 255]) # 9
-        faces.append([255, 257, 258]) # 10
-        faces.append([258, 255, 256]) # 11
-
-        
-        faces.append([263, 271, 260]) # 0
-        faces.append([260, 259, 263]) # 1
-        faces.append([263, 259, 262]) # 2
-        faces.append([265, 263, 262]) # 3
-        faces.append([265, 262, 264]) # 4
-        faces.append([272, 263, 265]) # 5
-        faces.append([263, 272, 271]) # 6
-        faces.append([270, 260, 271]) # 7
-        
-        
-        faces.append([269, 270, 257]) # 8
-        faces.append([255, 269, 257]) # 9
-        faces.append([255, 257, 258]) # 10
-        faces.append([256, 255, 258]) # 11
-        faces.append([257, 270, 260]) # 12
-        faces.append([261, 257, 260]) # 13
-        faces.append([261, 260, 259]) # 14
-        
-
-        faces.append([257, 258, 261]) # 15
-        faces.append([309, 310, 308]) # 16
-        faces.append([306, 309, 308]) # 17
-        faces.append([308, 307, 306]) # 18
-        faces.append([307, 254, 306]) # 19
-        faces.append([306, 254, 273]) # 20
-        faces.append([273, 254, 253]) # 21
-        faces.append([277, 293, 292]) # 22
-
-        faces.append([277, 275, 276]) # 23
-        faces.append([276, 275, 274]) # 24
-        """
-    
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
