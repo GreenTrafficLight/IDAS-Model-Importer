@@ -2,7 +2,7 @@
 
 ![Akina Lake](https://i.imgur.com/9hStcZR.png)
 
-A Blender addon 2.8+ to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8). This addon can be also used to import trees and spectators (.pa8)
+A Blender addon 2.8+ (<2.93) to import .efo from Initial D Arcade Stage (I mainly tested the .efo from Initial D Arcade Stage Zero, but it should work with the versions 5 to 8). This addon can be also used to import trees and spectators (.pa8)
 
 P.S : This is a script that is focused in importing the models like in **CAR**, **CHARACTERS** and **COURSE**. I haven't done a lot of testing in the .efo that are present in the **ACROBATA** and others folders.
 
@@ -27,16 +27,14 @@ In order to port the gallery and the trees correctly, you will need the folder n
 * The gallery doesn't use rotations. In the game, they turn according to where the camera is.
 * For the characters, there isn't any bones for the mouths and hands, the game use different models for the expressions and gestures. However, the expressions doesn't have any UV so that's why there is only one face textured for the characters. I don't know how they did it.
 
-## TO DO (not interested in the moment)
-
-(To most likely to least likely)
+## TO DO
 
 * Add automatic reposition for mesh with locators (i.e : Mufflers and drivers)
-* Fix Miki bone weights (let's be honest, nobody like him anyways lol)
+* Fix Miki bone weights
 * Add support for other paths
 * Add support for binormals and tangents for the courses (This would at the top, but I don't know if Blender support the assignement of binormals and tangents)
 * Rework the materials (I didn't use all the properties, but Blender is missing some/are different than the one used in the game) 
-* Make a import all .efo for the cars
+* Make a "import all .efo" for the cars
 * Add support for the animations of characters (.edo) (Never worked with animations, that why it's way down here)
 * Rework the shaders (The game use shaders that are probably impossible to re-create in Blender)
 
