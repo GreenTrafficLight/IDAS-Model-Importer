@@ -6,7 +6,6 @@ class sShape(sShapeHeader):
     
     def __init__(self, bs, sSceneDatabase):
         self.bs = bs
-        self.sSceneDatabase = sSceneDatabase
 
         self.name = ""
         self.infoName = ""
