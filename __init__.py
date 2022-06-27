@@ -38,7 +38,7 @@ class ImportEFO(Operator, ImportHelper):
         default=True,
     )
 
-    import_gallery = EnumProperty(
+    import_gallery : EnumProperty(
         name="Import gallery",
         description="Choose which gallery to import",
         items=(
@@ -56,7 +56,7 @@ class ImportEFO(Operator, ImportHelper):
         default='OPT_A',
     )
 
-    import_trees = EnumProperty(
+    import_trees : EnumProperty(
         name="Import trees",
         description="Choose which lod to import from trees",
         items=(
@@ -71,6 +71,7 @@ class ImportEFO(Operator, ImportHelper):
 
     def execute(self, context):
         from . import  import_efo
+        print(self.import_trees)
         import_efo.main(self.filepath, self.clear_scene, self.import_textures, self.import_trees, self.import_gallery)
         return {'FINISHED'}
 
