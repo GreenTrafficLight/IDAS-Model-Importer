@@ -6,12 +6,13 @@ import os
 
 from math import *
 from mathutils import *
+from bpy_extras import image_utils
+from collections import *
+
 from .efo import *
 from .pa8 import *
 from .Utilities import *
 from .Blender import *
-from bpy_extras import image_utils
-
 
 # Meshes
 
@@ -120,7 +121,6 @@ def build_hierarchy(efo, texture_dir, filename):
 
 def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, armature):
 
-    
     mesh = bpy.data.meshes.new(shape.name)
     obj = bpy.data.objects.new(shape.name, mesh)
 
@@ -402,10 +402,7 @@ def extract_textures(efo, texture_dir):
 
 def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES')
-    path = bpy.context.active_object
-    path.empty_display_size = 0
-    path.name = tree_path_name
+    path = add_empty(tree_path_name, empty_rotation=(radians(90), 0, 0))
 
     C = bpy.context
 
@@ -413,70 +410,49 @@ def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
 
     if import_trees == "OPT_B":
 
-        bpy.ops.object.empty_add(type='PLAIN_AXES')
-        a_lod_empty = bpy.context.active_object
-        a_lod_empty.empty_display_size = 0.05
-        a_lod_empty.name = "a"
-        a_lod_empty.parent = path
+        a_lod_empty = add_empty("a", path)
         lod_chosen = "a"
 
     if import_trees == "OPT_C":
 
-        bpy.ops.object.empty_add(type='PLAIN_AXES')
-        b_lod_empty = bpy.context.active_object
-        b_lod_empty.empty_display_size = 0.05
-        b_lod_empty.name = "b"
-        b_lod_empty.parent = path
+        b_lod_empty = add_empty("b", path)
         lod_chosen = "b"
 
     if import_trees == "OPT_D":
 
-        bpy.ops.object.empty_add(type='PLAIN_AXES')
-        c_lod_empty = bpy.context.active_object
-        c_lod_empty.empty_display_size = 0.05
-        c_lod_empty.name = "c"
-        c_lod_empty.parent = path
+        c_lod_empty = add_empty("c", path)
         lod_chosen = "c"
-
-    print(len(pa.list))
 
     for i in range(len(pa.list)): #len(pa.list)
 
         name = format(int(pa.list[i][0]), "02")
 
-        src_obj = {lod:mesh for (lod, mesh) in tree_meshes.items() if name in lod[:3]}
-        
-        rotation = Quaternion(pa.list[i][2])
-        axis, angle = rotation.to_axis_angle()
+        src_obj = {lod:meshs for (lod, meshs) in tree_meshes.items() if name in lod[:3]}
 
-        for lod, mesh in src_obj.items():
+        for lod, meshs in src_obj.items():
 
             if lod_chosen in lod[:3]:
+                
+                for mesh in meshs :
 
-                new_obj = mesh.copy()
-                new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ Matrix.Rotation(radians(90.0), 4, 'X') @ Matrix.Scale(pa.list[i][3], 4)
-                new_obj.name = tree_path_name + "_" + str(i)
+                    new_obj = mesh.copy()
+                    new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ pa.list[i][2] @ Matrix.Scale(pa.list[i][3], 4)
+                    new_obj.name = tree_path_name + "_" + str(i)
 
-                bpy.context.view_layer.update()
+                    bpy.context.view_layer.update()
 
-                if "a" in lod[:3]:
-                    new_obj.parent = a_lod_empty
-                elif "b" in lod[:3]:
-                    new_obj.parent = b_lod_empty
-                elif "c" in lod[:3]:
-                    new_obj.parent = c_lod_empty
+                    if "a" in lod[:3]:
+                        new_obj.parent = a_lod_empty
+                    elif "b" in lod[:3]:
+                        new_obj.parent = b_lod_empty
+                    elif "c" in lod[:3]:
+                        new_obj.parent = c_lod_empty
 
-                C.collection.objects.link(new_obj)
-
-
-        print(i)
+                    C.collection.objects.link(new_obj)
 
 def import_gallery_path(pa, gallery_path_name, gallery_meshes):
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES')
-    path = bpy.context.active_object
-    path.empty_display_size = 0
-    path.name = gallery_path_name
+    path = add_empty(gallery_path_name, empty_rotation=(radians(90), 0, 0))
 
     C = bpy.context
 
@@ -484,33 +460,36 @@ def import_gallery_path(pa, gallery_path_name, gallery_meshes):
 
         name = format(int(pa.list[i][0]), "02")
 
-        src_obj = {lod:mesh for (lod, mesh) in gallery_meshes.items() if name in lod[:3]}
+        src_obj = {lod:meshs for (lod, meshs) in gallery_meshes.items() if name in lod[:3]}
                 
-        for lod, mesh in src_obj.items():
+        for lod, meshs in src_obj.items():
 
-            new_obj = mesh.copy()
-            new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ Matrix.Rotation(radians(90.0), 4, 'X') @ Matrix.Scale(pa.list[i][3], 4)
-            new_obj.name = gallery_path_name + "_" + str(i)
+            for mesh in meshs :
 
-            bpy.context.view_layer.update()
-            
-            new_obj.parent = path
-            
-            C.collection.objects.link(new_obj)
+                new_obj = mesh.copy()
+                new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ pa.list[i][2] @ Matrix.Scale(pa.list[i][3], 4)
+                new_obj.name = gallery_path_name + "_" + str(i)
+
+                bpy.context.view_layer.update()
+                
+                new_obj.parent = path
+                
+                C.collection.objects.link(new_obj)
 
 def get_meshes_for_path(fileName):
 
-    lods = {}
+    lods = defaultdict(list)
 
     objects = bpy.context.scene.objects[fileName]
 
     def recurse(ob, parent, depth):
         if not ob.children:
-            lods[ob.parent.name] = ob
+            lods[ob.parent.name].append(ob)
             return
         
         for child in ob.children:
             recurse(child, ob,  depth + 1)
+
     recurse(objects, objects.parent, 0)
 
     return lods
@@ -567,7 +546,7 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
             # Get efo
 
             for filename_dir in os.listdir(head):
-                if os.path.splitext(filename_dir)[1] == ".efo" and '_'.join(efoName.split("_")[0:3]) + "_tree" in filename_dir and filename_dir.split("_")[-1] != "test.efo":
+                if os.path.splitext(filename_dir)[1] == ".efo" and '_'.join(efoName.split("_")[0:3]) + "_tree" in filename_dir and filename_dir.split("_")[-1] != "test.efo" and filename_dir.split("_")[-1] != "n.efo":
                     treePath = head + "\\" + filename_dir
 
             treeName = treePath.split("\\")[-1]
@@ -586,6 +565,9 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
             
             pa = PA(path_dir + path_tree)
             import_trees_path(pa, os.path.splitext(path_tree)[0], tree_meshes, import_trees)
+
+            # delete tree meshes
+            delete_hierarchy(os.path.splitext(treeName)[0])
 
     if import_gallery != 'OPT_A':
 
@@ -684,6 +666,9 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
 
             pa = PA(path_dir + path_gallery)
             import_gallery_path(pa, os.path.splitext(path_gallery)[0], gallery_meshes)
+
+            # delete gallery meshes
+            delete_hierarchy(os.path.splitext(galleryName)[0])
 
 
     return {'FINISHED'}
