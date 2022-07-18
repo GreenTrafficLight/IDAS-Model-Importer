@@ -33,16 +33,8 @@ class PA:
             y_rotation = Matrix.Rotation(radians(values[9]), 3, 'Y')
             z_rotation = Matrix.Rotation(radians(values[10]), 3, 'Z')
             euler_rotation_matrix = z_rotation @ x_rotation @ y_rotation
-
-            #print((z_rotation @ x_rotation @ y_rotation).to_euler())
             
             #euler_rotation_matrix = Euler((radians(values[8]), radians(values[9]), radians(values[10])), 'XYZ').to_matrix()
-
-            # z axis
-            #rotation_matrix[0][0] = values[6]
-            #rotation_matrix[0][1] = -values[4]
-            #rotation_matrix[1][0] = values[4]
-            #rotation_matrix[1][1] = values[6]
 
             # y axis
             rotation_matrix[0][0] = values[6]
