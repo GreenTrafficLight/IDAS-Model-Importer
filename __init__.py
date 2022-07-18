@@ -14,7 +14,7 @@ bl_info = {
 import bpy
 
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
+from bpy.props import StringProperty, BoolProperty, EnumProperty, CollectionProperty
 from bpy.types import Operator
 
 
@@ -25,6 +25,9 @@ class ImportEFO(Operator, ImportHelper):
 
     filename_ext = ".efo"
     filter_glob: StringProperty(default="*.efo", options={'HIDDEN'}, maxlen=255,)
+
+    # Selected files
+    files: CollectionProperty(type=bpy.types.PropertyGroup)
 
     clear_scene: BoolProperty(
         name="Clear scene",
@@ -72,7 +75,7 @@ class ImportEFO(Operator, ImportHelper):
     def execute(self, context):
         from . import  import_efo
         print(self.import_trees)
-        import_efo.main(self.filepath, self.clear_scene, self.import_textures, self.import_trees, self.import_gallery)
+        import_efo.main(self.filepath, self.files, self.clear_scene, self.import_textures, self.import_trees, self.import_gallery)
         return {'FINISHED'}
 
 def menu_func_import(self, context):

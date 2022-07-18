@@ -517,38 +517,46 @@ def get_meshes_for_path(fileName):
 
 #
 
-def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
+def main(filepath, files, clear_scene, import_textures, import_trees, import_gallery):
+    
     if clear_scene == True:
         clearScene()
-    efo = EFO(filepath)
-    efoName = filepath.split("\\")[-1]
 
-    head = os.path.split(filepath)[0]
+    folder = (os.path.dirname(filepath))
 
-    if import_textures:
+    for i, j in enumerate(files):
 
-        texture = head + "\\" + "texture.efo"
-        if os.path.exists(texture):
+        path_to_file = (os.path.join(folder, j.name))
 
-            texture_efo = EFO(texture)
-            texture_dir = filepath.replace(efoName, "textures\\")
-            extract_textures(texture_efo, texture_dir)
-            extract_textures(efo, texture_dir)
+        efo = EFO(path_to_file)
+        efoName = path_to_file.split("\\")[-1]
 
-        else:
-            
-            texture_dir = head + "\\" + efoName[:-4] + "_" + "textures\\"
-            extract_textures(efo, texture_dir)
-    
-    else :
+        head = os.path.split(path_to_file)[0]
 
-        texture_dir = ""
+        if import_textures:
 
-    build_hierarchy(efo, texture_dir, os.path.splitext(efoName)[0])
+            texture = head + "\\" + "texture.efo"
+            if os.path.exists(texture):
+
+                texture_efo = EFO(texture)
+                texture_dir = path_to_file.replace(efoName, "textures\\")
+                extract_textures(texture_efo, texture_dir)
+                extract_textures(efo, texture_dir)
+
+            else:
+                
+                texture_dir = head + "\\" + efoName[:-4] + "_" + "textures\\"
+                extract_textures(efo, texture_dir)
+        
+        else :
+
+            texture_dir = ""
+
+        build_hierarchy(efo, texture_dir, os.path.splitext(efoName)[0])
 
     if import_trees != 'OPT_A' :
 
-        path_dir = os.path.dirname(os.path.dirname(filepath)) + "\\" + "path" + "\\"
+        path_dir = os.path.dirname(os.path.dirname(path_to_file)) + "\\" + "path" + "\\"
         
         if os.path.isdir(path_dir):
 
@@ -576,7 +584,7 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
                 
                 tree = EFO(treePath)
 
-                treeNameHead = os.path.split(filepath)[0]
+                treeNameHead = os.path.split(path_to_file)[0]
                 common_texture_dir = treeNameHead + "\\" + treeName[:-4] + "_" + "textures\\"
                 extract_textures(tree, common_texture_dir)
 
@@ -589,11 +597,11 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
 
     if import_gallery != 'OPT_A':
 
-        path_dir = os.path.dirname(os.path.dirname(filepath)) + "\\" + "path" + "\\"
+        path_dir = os.path.dirname(os.path.dirname(path_to_file)) + "\\" + "path" + "\\"
 
         if os.path.isdir(path_dir):
 
-            common_dir = os.path.dirname(os.path.dirname(os.path.dirname(filepath)))  + "\\" + "common" + "\\"
+            common_dir = os.path.dirname(os.path.dirname(os.path.dirname(path_to_file)))  + "\\" + "common" + "\\"
 
             for filename_dir in os.listdir(path_dir):
                 if os.path.splitext(filename_dir)[1] == ".pa8" and "_path_gallery" in filename_dir:
@@ -674,7 +682,7 @@ def main(filepath, clear_scene, import_textures, import_trees, import_gallery):
             gallery = EFO(galleryPath)
             galleryName = galleryPath.split("\\")[-1]
 
-            galleryNameHead = os.path.split(filepath)[0]
+            galleryNameHead = os.path.split(path_to_file)[0]
             common_texture_dir = galleryNameHead + "\\" + galleryName[:-4] + "_" + "textures\\"
             extract_textures(gallery, common_texture_dir)
 
