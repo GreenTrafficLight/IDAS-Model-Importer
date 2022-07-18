@@ -1,4 +1,8 @@
+from cgi import test
 from .Utilities import *
+
+from math import *
+from mathutils import *
 
 class PA:
     def __init__(self, filepath):
@@ -16,13 +20,31 @@ class PA:
         binaryReader.seek(16, 1)
 
         for i in range(count):
-            matrix = []
+            values = []
             for j in range(0, 12):
-                matrix.append(binaryReader.readFloat())
+                values.append(binaryReader.readFloat())
 
-            translation = (matrix[0], -matrix[2], matrix[1])
-            mesh_index = matrix[3]
-            rotation = (matrix[10], matrix[7], matrix[8], matrix[9])
-            scale = matrix[11]
+            rotation_matrix = Matrix.Identity(3)
+
+            translation = (values[0], values[1], values[2])
+            mesh_index = values[3]
+
+            x_rotation = Matrix.Rotation(radians(values[8]), 3, 'X')
+            y_rotation = Matrix.Rotation(radians(values[9]), 3, 'Y')
+            z_rotation = Matrix.Rotation(radians(values[10]), 3, 'Z')
+            euler_rotation_matrix = z_rotation @ x_rotation @ y_rotation
             
-            self.list.append((mesh_index, translation, rotation, scale))
+            #euler_rotation_matrix = Euler((radians(values[8]), radians(values[9]), radians(values[10])), 'XYZ').to_matrix()
+
+            # y axis
+            rotation_matrix[0][0] = values[6]
+            rotation_matrix[0][2] = values[4]
+            rotation_matrix[2][0] = -values[4]
+            rotation_matrix[2][2] = values[6]
+
+            rotation_matrix @= euler_rotation_matrix
+            rotation_matrix = rotation_matrix.to_4x4()
+
+            scale = values[11]
+            
+            self.list.append((mesh_index, translation, rotation_matrix, scale))
