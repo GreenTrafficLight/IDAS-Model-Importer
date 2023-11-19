@@ -296,7 +296,10 @@ def get_materials(sSceneDatabase, shape, texture_dir):
         if "teaSA_color" in state.userParameter:
             bsdf.inputs['Base Color'].default_value = (state.userParameter["teaSA_color"][0], state.userParameter["teaSA_color"][1], state.userParameter["teaSA_color"][2], 1)
 
-        bsdf.inputs['Specular'].default_value = state.specular
+        if bpy.app.version < (4, 0, 0):
+            bsdf.inputs['Specular'].default_value = state.specular
+        else:
+            bsdf.inputs['Specular IOR Level'].default_value = state.specular
         if bpy.app.version >= (2, 92, 0):
             bsdf.inputs['Emission Strength'].default_value = state.emission
 
@@ -377,7 +380,10 @@ def get_image(sSceneDatabase, texture_dir, texture, state, nodes, links, bsdf, o
                 specularTextureImage_node = nodes.new("ShaderNodeTexImage")
                 specularTextureImage_node.image = texture_file
                 
-                links.new(bsdf.inputs['Specular'], specularTextureImage_node.outputs['Color'])
+                if bpy.app.version < (4, 0, 0):
+                    links.new(bsdf.inputs['Specular'], specularTextureImage_node.outputs['Color'])
+                else:
+                    links.new(bsdf.inputs['Specular IOR Level'], specularTextureImage_node.outputs['Color'])
 
             elif sTexture.textureType == 6: # ???
 
