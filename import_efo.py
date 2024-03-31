@@ -215,7 +215,8 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
                     group.add([i], weight, 'REPLACE')
 
     # Set normals
-    mesh.use_auto_smooth = True
+    if bpy.app.version < (4, 1, 0):
+        mesh.use_auto_smooth = True
 
     if normals != []:
         mesh.normals_split_custom_set_from_vertices(normals)
@@ -300,6 +301,7 @@ def get_materials(sSceneDatabase, shape, texture_dir):
             bsdf.inputs['Specular'].default_value = state.specular
         else:
             bsdf.inputs['Specular IOR Level'].default_value = state.specular
+        
         if bpy.app.version >= (2, 92, 0):
             bsdf.inputs['Emission Strength'].default_value = state.emission
 
