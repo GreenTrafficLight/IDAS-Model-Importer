@@ -8,7 +8,15 @@ P.S : This is a script that is focused in importing the models like in **CAR**, 
 
 ## NOTES
 
-To get the correct materials of a car, you will to import a .efo from the folder **COLORS** first.
+* **IMPORTING A MAP TAKE A LOT OF MEMORY (up to 1-4GB of memory depending on the map)**
+* To get the correct materials of a car, you will to import a .efo from the folder **COLORS** first.
+* The gallery doesn't use rotations. In the game, they turn according to where the camera is.
+* Some models can have black parts, it means it's double faced
+* Sayuki2.efo is the same model as Sayuki.efo
+* Gallery of Dry (Summer) and Rain (Summer) need to have a scale of 4.5 (Select all the objets from the gallery parent and then [scale them by using the individual origin option](https://www.youtube.com/watch?v=Q_EsYIJy-vA&t=89s))
+* If you import a map, you will see it will have weird black thingy on some part, this is normal because of the alpha channel (i.e : Nagao)
+
+## IMPORTING TREES/GALLERY
 
 In order to port the gallery and the trees correctly, you will need the folder named **path**. The folders need to be like it was originally in the game folder. 
 
@@ -21,36 +29,19 @@ In order to port the gallery and the trees correctly, you will need the folder n
    * (your folder)/(name of the course)/efo
    * (your folder)/(name of the course)/path
 
-## OTHERS
-
-* **IMPORTING A MAP TAKE A LOT OF MEMORY (up to 1-4GB depending on the map)**
-* The gallery doesn't use rotations. In the game, they turn according to where the camera is.
-* For the characters, there isn't any bones for the mouths and hands, the game use different models for the expressions and gestures. However, the expressions doesn't have any UV so that's why there is only one face textured for the characters. I don't know how they did it.
-
 ## TO DO
 
 * Add automatic reposition for mesh with locators (i.e : Mufflers and drivers)
 * Fix Miki bone weights
 * Add support for other paths
 * Add support for binormals and tangents for the courses (This would at the top, but I don't know if Blender support the assignement of binormals and tangents)
-* Rework the materials (I didn't use all the properties, but Blender is missing some/are different than the one used in the game)
 * Add support for the animations of characters (.edo)
-* Rework the shaders (The game use shaders that are probably impossible to re-create in Blender)
 
 ## Errors that need to be fixed
 
 * Miki bone weights and indices are wrong
 
-## Errors that are normal
 
-* Sayuki2.efo is the same model as Sayuki.efo
-* Gallery of Dry (Summer) and Rain (Summer) need to have a scale of 4.5 (Select all the objets from the gallery parent and then [scale them by using the individual origin option](https://www.youtube.com/watch?v=Q_EsYIJy-vA&t=89s))
-* Some models can have black parts, it means it's double faced
-* If you import a map, you will see it will have weird black thingy on some part, this is normal because of the alpha channel (i.e : Nagao)
-
-## Codes that helped me
-
-[DGIorio Blender addons](https://drive.google.com/drive/folders/10DGQFPF6aeco2tUxp6MBfSidR-8lhNxe)
 
 
 

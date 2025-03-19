@@ -1,10 +1,10 @@
-from ..Utilities import *
+from ....utilities import *
 
 from .Skeleton import sSkeleton
 
 class sBone(sSkeleton):
     
-    def __init__(self, bs, sSceneDatabase):
+    def __init__(self, bs: BinaryReader, sSceneDatabase):
         self.bs = bs
 
         self.name = ""
@@ -69,8 +69,8 @@ class sBone(sSkeleton):
         self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "") # info sBone name
 
     def readMatrices(self):
-        self.mtxLocal = Matrix4x3.fromBytes(self.bs.readBytes(48))
-        self.mtxDefault = Matrix4x3.fromBytes(self.bs.readBytes(48))
+        self.mtxLocal = self.bs.readMatrix3x4()
+        self.mtxDefault = self.bs.readMatrix3x4()
 
     def readUserParameters(self):
         self.bs.readUInt() # size of user parameters
@@ -80,8 +80,8 @@ class sBone(sSkeleton):
             self.bs.readBytes(28) # ???
 
     def readTransformations(self, sSceneDatabase):
-        self.scale = Vector3.fromBytes(self.bs.readBytes(12))
+        self.scale = self.bs.readVector3f()
         if "rotation" in sSceneDatabase._sSerial["_sSerial::_sBone"]:
-            self.rotation = Vector3.fromBytes(self.bs.readBytes(12))
-        self.quaternion = Vector4.fromBytes(self.bs.readBytes(16))
-        self.translation = Vector3.fromBytes(self.bs.readBytes(12))
+            self.rotation = self.bs.readVector3f()
+        self.quaternion = self.bs.readVector4f()
+        self.translation = self.bs.readVector3f()

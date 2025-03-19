@@ -1,4 +1,4 @@
-from ..Utilities import *
+from ....utilities import *
 
 from .Shape import sShape
 

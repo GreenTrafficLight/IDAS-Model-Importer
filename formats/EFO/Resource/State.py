@@ -1,10 +1,10 @@
-from ..Utilities import *
+from ....utilities import *
 
 from .Shape import sShape
 
 class sState(sShape):
    
-    def __init__(self, bs, sSceneDatabase):
+    def __init__(self, bs: BinaryReader, sSceneDatabase):
         self.bs = bs
 
         self.name = ""
@@ -134,7 +134,7 @@ class sState(sShape):
             userParameterName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
             self.bs.readBytes(4) # unknown 0x4
             self.bs.readBytes(8) # zeros(?)
-            userParameterValue = Vector3.fromBytes(self.bs.readBytes(12))
+            userParameterValue = self.bs.readVector3f()
             self.bs.readBytes(4) # zeros(?)
             
             self.userParameter[userParameterName] = userParameterValue

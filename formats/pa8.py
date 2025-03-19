@@ -1,5 +1,5 @@
 from cgi import test
-from .Utilities import *
+from ..utilities import *
 
 from math import *
 from mathutils import *
@@ -10,7 +10,6 @@ class PA:
         binaryReader = BinaryReader(pa_file)
 
         self.list = []
-        self.list2 = []
 
         header = binaryReader.bytesToString(binaryReader.readBytes(4))
         binaryReader.seek(4, 1)

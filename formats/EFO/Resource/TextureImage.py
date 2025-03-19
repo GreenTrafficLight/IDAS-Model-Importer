@@ -1,10 +1,10 @@
-from ..Utilities import *
+from ....utilities import *
 
 from .Texture import sTexture
 
 class sTextureImage(sTexture):
     
-    def __init__(self, bs, sSceneDatabase):
+    def __init__(self, bs: BinaryReader, sSceneDatabase):
         self.bs = bs
 
         self.name = ""
@@ -31,7 +31,8 @@ class sTextureImage(sTexture):
 
         if "fileName" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.bs.readUInt() # fileName Size
-            self.fileName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+            fileNameSize = self.bs.readUShort()
+            self.fileName = self.bs.bytesToString(self.bs.readBytes(fileNameSize)).replace("\0", "")
         
         if "flag" in sSceneDatabase._sSerial["_sSerial::_sTextureImage"]:
             self.flag = self.bs.readUInt()
@@ -42,9 +43,11 @@ class sTextureImage(sTexture):
             self.separateImageOffset = self.bs.readUInt()
 
         self.bs.readUInt() 
-        self.name = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        nameSize = self.bs.readUShort()
+        self.name = self.bs.bytesToString(self.bs.readBytes(nameSize)).replace("\0", "")
         self.bs.readUInt()
-        self.infoName = self.bs.bytesToString(self.bs.readBytes(self.bs.readUShort())).replace("\0", "")
+        infoNameSize = self.bs.readUShort()
+        self.infoName = self.bs.bytesToString(self.bs.readBytes(infoNameSize)).replace("\0", "")
 
     def readImage(self):
         self.file = self.bs.readBytes(self.bs.readUInt())

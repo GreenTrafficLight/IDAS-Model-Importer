@@ -1,8 +1,8 @@
-from ..Utilities import *
+from ....utilities import *
 
 class sSceneDatabase:
     
-    def __init__(self, br):
+    def __init__(self, br: BinaryReader):
         self.br = br
         
         self.name = ""
@@ -30,7 +30,6 @@ class sSceneDatabase:
         self.textureSignatures = []
         self.skeletonSignatures = []
         self.textureImageSignatures = []
-
 
         self.load()
 

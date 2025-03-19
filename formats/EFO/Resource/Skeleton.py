@@ -1,8 +1,8 @@
-from ..Utilities import *
+from ....utilities import *
 
 class sSkeleton:
 
-    def __init__(self, bs):
+    def __init__(self, bs: BinaryReader):
         self.bs = bs
 
         self.name = ""

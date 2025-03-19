@@ -1,5 +1,7 @@
 import struct
 
+import mathutils
+
 class BinaryReader:
 
     def __init__(self, data, endian="<"):
@@ -72,6 +74,36 @@ class BinaryReader:
                 bytes.append(character)
 
         return bytes.decode(encoding)
+
+    def readVector3f(self):
+        x, y, z = struct.unpack(self.endian + "fff", self.read(12))
+        return x, y, z
+    
+    def readVector4f(self):
+        x, y, z, w = struct.unpack(self.endian + "ffff", self.read(16))
+        return x, y, z, w
+
+    def readMatrix4x4(self):
+        matrix = []
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        return matrix
+    
+    def readMatrix3x4(self):
+        matrix = []
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        matrix.append(struct.unpack(self.endian + "ffff", self.read(16)))
+        return matrix
+
+    def readMatrix3x3(self):
+        matrix = []
+        matrix.append(struct.unpack(self.endian + "fff", self.read(12)))
+        matrix.append(struct.unpack(self.endian + "fff", self.read(12)))
+        matrix.append(struct.unpack(self.endian + "fff", self.read(12)))
+        return matrix
 
     def bytesToString(self, byteArray, encoding="utf-8"):
         try:

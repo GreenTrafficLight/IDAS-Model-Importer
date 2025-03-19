@@ -1,7 +1,7 @@
 from os import system
 from mathutils import *
 from .Resource import *
-from .Utilities import *
+from ...utilities import *
 
 class EFO:
     
@@ -14,11 +14,11 @@ class EFO:
         
         if "_sSerial::_sShapeHeader" in self._sSceneDatabase._sSerial:
 
-            for shapeHeader in self._sSceneDatabase.shapeHeaderSignatures:
+            for shapeHeaderSignature in self._sSceneDatabase.shapeHeaderSignatures:
                 
                 _sShapeHeader = sShapeHeader(binaryReader, self._sSceneDatabase)
                 print(binaryReader.tell())
-                self._sSceneDatabase.shapeHeader[shapeHeader] = _sShapeHeader
+                self._sSceneDatabase.shapeHeader[shapeHeaderSignature] = _sShapeHeader
 
                 for shape in _sShapeHeader.shape:
                     
@@ -31,7 +31,6 @@ class EFO:
                         _sState = sState(binaryReader, self._sSceneDatabase)
                         print(binaryReader.tell())
                         self._sSceneDatabase.state[_sShape.state] = _sState
-
 
                     for texture in _sState.texture:
 
@@ -161,11 +160,11 @@ class EFO:
 
             print(binaryReader.tell())
 
-            for skeleton in self._sSceneDatabase.skeletonSignatures:
+            for skeletonSignature in self._sSceneDatabase.skeletonSignatures:
 
                 _sSkeleton = sSkeleton(binaryReader)
                 print(binaryReader.tell())
-                self._sSceneDatabase.skeleton[skeleton] = _sSkeleton
+                self._sSceneDatabase.skeleton[skeletonSignature] = _sSkeleton
 
                 for bone in _sSkeleton.bone:
 
@@ -213,7 +212,3 @@ class EFO:
                         
                     _sTextureImage = sTextureImage(binaryReader, self._sSceneDatabase)
                     self._sSceneDatabase.textureImage[textureImageSignature] = _sTextureImage
-
-    def read_sShapeHeader(sSceneDatabase, shapeHeader):
-        _sShapeHeader = sShapeHeader(binaryReader)
-        sSceneDatabase.shapeHeader[shapeHeader] = _sShapeHeader

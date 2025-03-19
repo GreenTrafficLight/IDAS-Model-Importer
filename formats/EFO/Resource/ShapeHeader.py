@@ -1,10 +1,10 @@
-from ..Utilities import *
+from ....utilities import *
 
 from .SceneDatabase import sSceneDatabase
 
 class sShapeHeader(sSceneDatabase):
     
-    def __init__(self, bs, sSceneDatabase):
+    def __init__(self, bs: BinaryReader, sSceneDatabase):
         self.bs = bs
 
         self.name = ""
@@ -15,9 +15,9 @@ class sShapeHeader(sSceneDatabase):
         self.shapeDic = {}
         self.shape = []
 
-        self.BSphere = 0
-        self.BBoxCenter = 0
-        self.BBoxSize = 0
+        self.BSphere = None
+        self.BBoxCenter = None
+        self.BBoxSize = None
 
         self.sortGroup = 0
 
@@ -56,9 +56,9 @@ class sShapeHeader(sSceneDatabase):
             self.shape.append(self.bs.readUShort())
 
     def readBoundingBox(self):
-        self.BSphere = Vector4.fromBytes(self.bs.readBytes(16))
-        self.BBoxCenter = Vector3.fromBytes(self.bs.readBytes(12))
-        self.BBoxSize = Vector3.fromBytes(self.bs.readBytes(12))
+        self.BSphere = self.bs.readVector4f()
+        self.BBoxCenter = self.bs.readVector3f()
+        self.BBoxSize = self.bs.readVector3f()
 
     def readStateNameList(self):
         self.bs.readUInt() # size of stateName list

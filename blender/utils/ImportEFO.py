@@ -5,100 +5,82 @@ import numpy as np
 import os
 
 from math import *
-from mathutils import *
+import mathutils
 from bpy_extras import image_utils
 from collections import *
 
-from .efo import *
-from .pa8 import *
-from .Utilities import *
-from .Blender import *
+from ...formats.EFO import EFO
+from ...utilities import *
 
 # Meshes
 
-def build_hierarchy(efo, texture_dir, filename):
-
-
-    bpy.ops.object.add(type="ARMATURE")
-    file = bpy.context.object
-    file.rotation_euler = ( radians(90), 0, 0 )
-    file.name = filename
+def build_hierarchy(efo, textureDir, filename):
 
     for skeletonSignature in efo._sSceneDatabase.skeleton.keys():
 
         skeleton = efo._sSceneDatabase.skeleton[skeletonSignature]
 
-        bpy.ops.object.add(type="ARMATURE")
-        ob = bpy.context.object
-        ob.name = skeleton.name
-        ob.parent = file
+        amt = bpy.data.armatures.new(skeleton.name)
+        ob = bpy.data.objects.new(skeleton.name, amt)
+        ob.rotation_euler = (radians(90), 0, 0)
 
-        amt = ob.data
-        amt.name = skeleton.name
+        sceneCollection = bpy.context.scene.collection  # Get the default collection
+        sceneCollection.objects.link(ob)
+
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.mode_set(mode='EDIT')
 
         bone_mapping = []
-        
+
         for boneSignature in skeleton.bone:
 
             sBone = efo._sSceneDatabase.bone[boneSignature]
             bone_mapping.append(sBone.name)
 
-            bpy.ops.object.mode_set(mode='EDIT', toggle=False)
-            bone = amt.edit_bones.new(sBone.name)
+            bone = ob.data.edit_bones.new(sBone.name)
+            bone.tail = (0.01, 0.01, 0.01)
 
-            bone.tail = (0.01 , 0.01, 0.01)
-            
-            quad = Quaternion((sBone.quaternion[3], sBone.quaternion[0], sBone.quaternion[1], sBone.quaternion[2]))
+            quad = mathutils.Quaternion((sBone.quaternion[3], sBone.quaternion[0], sBone.quaternion[1], sBone.quaternion[2]))
             mat = quad.to_matrix().to_4x4()
-            mat = Matrix.Translation(sBone.translation) @ mat
+            mat = mathutils.Matrix.Translation(sBone.translation) @ mat
             bone.matrix = mat
 
             if sBone.parentIndex != -1:
-
                 parent = efo._sSceneDatabase.bone[sBone.parent]
-
-                bone.parent = amt.edit_bones[parent.name]
-                bone.matrix = amt.edit_bones[parent.name].matrix @ bone.matrix
-
+                bone.parent = ob.data.edit_bones[parent.name]
+                bone.matrix = bone.parent.matrix @ bone.matrix
                 bone.head = bone.matrix.translation
 
-        bones = amt.edit_bones
+        bones = ob.data.edit_bones
         for boneSignature in skeleton.bone:
 
             sBone = efo._sSceneDatabase.bone[boneSignature]
-
-            if len(sBone.name) > 63: # Thanks Blender :)
-                bone = bones[sBone.name[:63]]
-            else:
-                bone = bones[sBone.name]
+            bone_name = sBone.name[:63] if len(sBone.name) > 63 else sBone.name
+            bone = bones[bone_name]
 
             if sBone.parentIndex != -1:
-
                 parent = efo._sSceneDatabase.bone[sBone.parent]
-                
                 bone.tail = bones[parent.name].head
 
         bpy.ops.object.mode_set(mode='OBJECT')
-  
+
         empty_list = []
 
         for boneSignature in skeleton.bone:
-
+            
             dummy = efo._sSceneDatabase.bone[boneSignature]
 
-            if bpy.app.version >= (2, 90, 0):
-                bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation, scale=dummy.scale)
-            else:
-                bpy.ops.object.empty_add(type='PLAIN_AXES', location=dummy.translation)
-
-            empty = bpy.context.active_object
+            empty = bpy.data.objects.new(dummy.name, None)
+            empty.empty_display_type = 'PLAIN_AXES'
             empty.empty_display_size = 0.05
-            empty.name = dummy.name
 
-            empty.matrix_local = dummy.mtxLocal
+            sceneCollection.objects.link(empty)
+
+            empty.location = mathutils.Vector(dummy.translation)
+            empty.matrix_local = mathutils.Matrix(Matrix4x3To4x4(dummy.mtxLocal))
             
             if dummy.rotation != 0:
-                empty.rotation_euler = dummy.rotation
+                empty.rotation_euler = mathutils.Vector(dummy.rotation)
 
             if dummy.parentIndex == -1:
                 empty.parent = ob
@@ -115,21 +97,21 @@ def build_hierarchy(efo, texture_dir, filename):
 
                     shape = efo._sSceneDatabase.shape[shapeSignature]
 
-                    build_mesh(efo._sSceneDatabase, shape,  empty, texture_dir, bone_mapping, ob)
+                    build_mesh(efo._sSceneDatabase, shape, empty, textureDir, bone_mapping, ob)
 
             empty_list.append(empty)
 
-def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, armature):
+def build_mesh(sSceneDatabase, shape, empty, textureDir, boneMapping, armature):  
 
     mesh = bpy.data.meshes.new(shape.name)
     obj = bpy.data.objects.new(shape.name, mesh)
 
-    shapeHeader.users_collection[0].objects.link(obj)
+    empty.users_collection[0].objects.link(obj)
 
     modifier = obj.modifiers.new(armature.name, type="ARMATURE")
     modifier.object = bpy.data.objects[armature.name]
 
-    obj.parent = shapeHeader
+    obj.parent = empty
 
     displayList = sSceneDatabase.displayList[shape.displayList]
     geometry = sSceneDatabase.geometry[displayList.geometry]
@@ -205,7 +187,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
     for i in range(primitiveList.vertexNumber):
         if "boneIndices" in vertexArray.array.array:
             for k, vg in enumerate(vertexArray.array.array["boneIndices"][i + primitiveList.startNumber]):
-                vg_name = bone_mapping[vg + 1]
+                vg_name = boneMapping[vg + 1]
                 if not vg_name in obj.vertex_groups:
                     group = obj.vertex_groups.new(name=vg_name)
                 else:
@@ -221,7 +203,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
     if normals != []:
         mesh.normals_split_custom_set_from_vertices(normals)
 
-    material = get_materials(sSceneDatabase, shape, texture_dir)
+    material = get_materials(sSceneDatabase, shape, textureDir)
 
     mesh.materials.append(material)
 
@@ -230,12 +212,12 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
         mesh = bpy.data.meshes.new(blendGeometry.name)
         obj = bpy.data.objects.new(blendGeometry.name, mesh)
 
-        shapeHeader.users_collection[0].objects.link(obj)
+        empty.users_collection[0].objects.link(obj)
 
         modifier = obj.modifiers.new(armature.name, type="ARMATURE")
         modifier.object = bpy.data.objects[armature.name]
 
-        obj.parent = shapeHeader
+        obj.parent = empty
 
         obj.hide_set(True)
 
@@ -276,7 +258,7 @@ def build_mesh(sSceneDatabase, shape, shapeHeader, texture_dir, bone_mapping, ar
 
 # Materials
 
-def get_materials(sSceneDatabase, shape, texture_dir):
+def get_materials(sSceneDatabase, shape, textureDir):
 
     state = sSceneDatabase.state[shape.state]
     
@@ -309,7 +291,7 @@ def get_materials(sSceneDatabase, shape, texture_dir):
             
             for texture in state.texture:
 
-                get_image(sSceneDatabase, texture_dir, texture, state, nodes, links, bsdf, output)
+                get_image(sSceneDatabase, textureDir, texture, state, nodes, links, bsdf, output)
 
     elif material:
 
@@ -325,7 +307,7 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
             for texture in state.texture:
 
-                get_image(sSceneDatabase, texture_dir, texture, state, nodes, links, bsdf, output)
+                get_image(sSceneDatabase, textureDir, texture, state, nodes, links, bsdf, output)
 
     if state.fillType == 0:
         material.blend_method = 'OPAQUE'
@@ -340,11 +322,11 @@ def get_materials(sSceneDatabase, shape, texture_dir):
 
 # Textures
 
-def get_image(sSceneDatabase, texture_dir, texture, state, nodes, links, bsdf, output):
+def get_image(sSceneDatabase, textureDir, texture, state, nodes, links, bsdf, output):
         
         sTexture = sSceneDatabase.texture[texture]
 
-        texture_filepath = f"{texture_dir}{sTexture.fileName}"
+        texture_filepath = f"{textureDir}{sTexture.fileName}"
 
         if os.path.isfile(texture_filepath):
 
@@ -396,118 +378,22 @@ def get_image(sSceneDatabase, texture_dir, texture, state, nodes, links, bsdf, o
                 print(sTexture.textureType)
                 pass
 
-def extract_textures(efo, texture_dir):
+def extract_textures(efo, textureDir):
 
     for textureImageSignature, textureImage in efo._sSceneDatabase.textureImage.items():
-        if textureImageSignature > 0 and textureImage.fileName != None and not os.path.isfile(texture_dir + textureImage.fileName):
-            if not os.path.exists(texture_dir):
-                os.mkdir(texture_dir)
-            f = open(texture_dir + textureImage.fileName, "wb")
+        if textureImageSignature > 0 and textureImage.fileName != None and not os.path.isfile(textureDir + textureImage.fileName):
+            if not os.path.exists(textureDir):
+                os.mkdir(textureDir)
+            f = open(textureDir + textureImage.fileName, "wb")
             f.write(textureImage.file)
             f.close()
 
-# Paths
-
-def import_trees_path(pa, tree_path_name, tree_meshes, import_trees):
-
-    path = add_empty(tree_path_name, empty_rotation=(radians(90), 0, 0))
-
-    C = bpy.context
-
-    lod_chosen = ["a", "b", "c"]
-
-    if import_trees == "OPT_B":
-
-        a_lod_empty = add_empty("a", path)
-        lod_chosen = "a"
-
-    if import_trees == "OPT_C":
-
-        b_lod_empty = add_empty("b", path)
-        lod_chosen = "b"
-
-    if import_trees == "OPT_D":
-
-        c_lod_empty = add_empty("c", path)
-        lod_chosen = "c"
-
-    for i in range(len(pa.list)): #len(pa.list)
-
-        name = format(int(pa.list[i][0]), "02")
-
-        src_obj = {lod:meshs for (lod, meshs) in tree_meshes.items() if name in lod[:3]}
-
-        for lod, meshs in src_obj.items():
-
-            if lod_chosen in lod[:3]:
-                
-                for mesh in meshs :
-
-                    new_obj = mesh.copy()
-                    new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ pa.list[i][2] @ Matrix.Scale(pa.list[i][3], 4)
-                    new_obj.name = tree_path_name + "_" + str(i)
-
-                    bpy.context.view_layer.update()
-
-                    if "a" in lod[:3]:
-                        new_obj.parent = a_lod_empty
-                    elif "b" in lod[:3]:
-                        new_obj.parent = b_lod_empty
-                    elif "c" in lod[:3]:
-                        new_obj.parent = c_lod_empty
-
-                    C.collection.objects.link(new_obj)
-
-def import_gallery_path(pa, gallery_path_name, gallery_meshes):
-
-    path = add_empty(gallery_path_name, empty_rotation=(radians(90), 0, 0))
-
-    C = bpy.context
-
-    for i in range(len(pa.list)): #len(pa.list)
-
-        name = format(int(pa.list[i][0]), "02")
-
-        src_obj = {lod:meshs for (lod, meshs) in gallery_meshes.items() if name in lod[:3]}
-                
-        for lod, meshs in src_obj.items():
-
-            for mesh in meshs :
-
-                new_obj = mesh.copy()
-                new_obj.matrix_local = Matrix.Translation(pa.list[i][1]) @ pa.list[i][2] @ Matrix.Scale(pa.list[i][3], 4)
-                new_obj.name = gallery_path_name + "_" + str(i)
-
-                bpy.context.view_layer.update()
-                
-                new_obj.parent = path
-                
-                C.collection.objects.link(new_obj)
-
-def get_meshes_for_path(fileName):
-
-    lods = defaultdict(list)
-
-    objects = bpy.context.scene.objects[fileName]
-
-    def recurse(ob, parent, depth):
-        if not ob.children:
-            lods[ob.parent.name].append(ob)
-            return
-        
-        for child in ob.children:
-            recurse(child, ob,  depth + 1)
-
-    recurse(objects, objects.parent, 0)
-
-    return lods
-
 #
 
-def main(filepath, files, clear_scene, import_textures, import_trees, import_gallery):
+def import_efo(filepath, files, clearScene, importTextures):
     
-    if clear_scene == True:
-        clearScene()
+    if clearScene == True:
+        clear_scene()
 
     folder = (os.path.dirname(filepath))
 
@@ -520,7 +406,7 @@ def main(filepath, files, clear_scene, import_textures, import_trees, import_gal
 
         head = os.path.split(path_to_file)[0]
 
-        if import_textures:
+        if importTextures:
 
             texture = head + "\\" + "texture.efo"
             if os.path.exists(texture):
@@ -541,154 +427,4 @@ def main(filepath, files, clear_scene, import_textures, import_trees, import_gal
 
         build_hierarchy(efo, texture_dir, os.path.splitext(efoName)[0])
 
-    if import_trees != 'OPT_A' :
-
-        path_dir = os.path.dirname(os.path.dirname(path_to_file)) + "\\" + "path" + "\\"
-        
-        if os.path.isdir(path_dir):
-
-            paths_tree = []
-        
-            # Get Path
-
-            for filename_dir in os.listdir(path_dir):
-                if os.path.splitext(filename_dir)[1] == ".pa8" and "_path_tree" in filename_dir:
-                    paths_tree.append(filename_dir)
-
-            for file in paths_tree:
-                if file.split("_")[-1] != "l.pa8" and file.split("_")[-1] != "r.pa8" and file.split("_")[-1] != "cull.pa8" and file.split("_")[-1] != "test.pa8":
-                    path_tree = file
-
-            # Get efo
-
-            for filename_dir in os.listdir(head):
-                if os.path.splitext(filename_dir)[1] == ".efo" and '_'.join(efoName.split("_")[0:3]) + "_tree" in filename_dir and filename_dir.split("_")[-1] != "test.efo" and filename_dir.split("_")[-1] != "n.efo":
-                    treePath = head + "\\" + filename_dir
-
-            treeName = treePath.split("\\")[-1]
-            
-            if efoName != treeName :
-                
-                tree = EFO(treePath)
-
-                treeNameHead = os.path.split(path_to_file)[0]
-                common_texture_dir = treeNameHead + "\\" + treeName[:-4] + "_" + "textures\\"
-                extract_textures(tree, common_texture_dir)
-
-                build_hierarchy(tree, common_texture_dir, os.path.splitext(treeName)[0])
-
-            tree_meshes = get_meshes_for_path(os.path.splitext(treeName)[0])
-            
-            pa = PA(path_dir + path_tree)
-            import_trees_path(pa, os.path.splitext(path_tree)[0], tree_meshes, import_trees)
-
-            # delete tree meshes
-            delete_hierarchy(os.path.splitext(treeName)[0])
-
-    if import_gallery != 'OPT_A':
-
-        path_dir = os.path.dirname(os.path.dirname(path_to_file)) + "\\" + "path" + "\\"
-
-        if os.path.isdir(path_dir):
-
-            common_dir = os.path.dirname(os.path.dirname(os.path.dirname(path_to_file)))  + "\\" + "common" + "\\"
-
-            for filename_dir in os.listdir(path_dir):
-                if os.path.splitext(filename_dir)[1] == ".pa8" and "_path_gallery" in filename_dir:
-                    path_gallery = filename_dir
-
-            # Dry (Summer)
-
-            if import_gallery == "OPT_B": 
-
-                if "day" in efoName :
-                    
-                    galleryPath = common_dir + "cmn_gal_sum_day_dry_ny.efo"
-
-                elif "ngt" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_sum_ngt_dry_ny.efo"
-
-            # Rain (Summer)
-
-            elif import_gallery == "OPT_C": 
-
-                if "day" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_sum_day_ran_ny.efo"
-
-                elif "ngt" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_sum_ngt_ran_ny.efo"
-
-            # Dry (Winter)
-
-            elif import_gallery == "OPT_D": 
-
-                if "day" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_win_day_dry_ny.efo"
-
-                elif "ngt" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_win_ngt_dry_ny.efo"
-
-            # Rain (Winter)
-
-            elif import_gallery == "OPT_E": 
-
-                if "day" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_win_day_ran_ny.efo"
-
-                elif "ngt" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_win_ngt_ran_ny.efo"
-
-            # Dry (Snow)
-
-            elif import_gallery == "OPT_F": 
-
-                if "day" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_snw_day_dry_kk.efo"
-
-                elif "ngt" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_snw_ngt_dry_kk.efo"
-
-            # Rain (Snow)
-
-            elif import_gallery == "OPT_G": 
-
-                if "day" in efoName :
-
-                    galleryPath = common_dir + "cmn_gal_snw_day_ran_kk.efo"
-
-                elif "ngt" in efoName :
-                    
-                    galleryPath = common_dir + "cmn_gal_snw_ngt_ran_kk.efo"
-                    
-            gallery = EFO(galleryPath)
-            galleryName = galleryPath.split("\\")[-1]
-
-            galleryNameHead = os.path.split(path_to_file)[0]
-            common_texture_dir = galleryNameHead + "\\" + galleryName[:-4] + "_" + "textures\\"
-            extract_textures(gallery, common_texture_dir)
-
-            build_hierarchy(gallery, common_texture_dir, os.path.splitext(galleryName)[0])
-
-            gallery_meshes = get_meshes_for_path(os.path.splitext(galleryName)[0])
-
-            pa = PA(path_dir + path_gallery)
-            import_gallery_path(pa, os.path.splitext(path_gallery)[0], gallery_meshes)
-
-            # delete gallery meshes
-            delete_hierarchy(os.path.splitext(galleryName)[0])
-
-
     return {'FINISHED'}
-
-
-if __name__ == '__main__':
-    main()
