@@ -1,3 +1,14 @@
+import bpy
+
+from bpy_extras.io_utils import ImportHelper
+from bpy.props import StringProperty, BoolProperty, EnumProperty, CollectionProperty
+from bpy.types import Operator
+
+from .Blender.operators.OT_EFO_Import import *
+from .Blender.operators.OT_TreePath_Import import *
+from .Blender.panels.PT_Gallery_Importer import *
+from .Blender.panels.PT_TreePath_Importer import *
+
 bl_info = {
 	"name": "Import Initial D Arcade Stage (5 to Zero) Models format (.efo)",
 	"description": "Import Initial D Arcade Stage Model",
@@ -11,86 +22,28 @@ bl_info = {
 	"support": "COMMUNITY",
 	"category": "Import-Export"}
 
-import bpy
-
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty, CollectionProperty
-from bpy.types import Operator
-
-
-class ImportEFO(Operator, ImportHelper):
-    """Load a EFO model file"""
-    bl_idname = "import_scene.efo_data"
-    bl_label = "Import EFO Data"
-
-    filename_ext = ".efo"
-    filter_glob: StringProperty(default="*.efo", options={'HIDDEN'}, maxlen=255,)
-
-    # Selected files
-    files: CollectionProperty(type=bpy.types.PropertyGroup)
-
-    clear_scene: BoolProperty(
-        name="Clear scene",
-        description="Clear everything from the scene",
-        default=False,
-    )
-
-    import_textures: BoolProperty(
-        name="Import textures",
-        description="Import the model with textures applied",
-        default=True,
-    )
-
-    import_gallery : EnumProperty(
-        name="Import gallery",
-        description="Choose which gallery to import",
-        items=(
-            ('OPT_A', "None", "Don't import gallery"),
-            
-            ('OPT_B', "Dry (Summer)", "Import gallery from summer"),
-            ('OPT_C', "Rain (Summer)", "Import gallery from summer and when it rain"),
-            
-            ('OPT_D', "Dry (Winter)", "Import gallery from winter"),
-            ('OPT_E', "Rain (Winter)", "Import gallery from winter and when it rain"),
-            
-            ('OPT_F', "Dry (Snow)", "Import gallery from snow maps"),
-            ('OPT_G', "Rain (Snow)", "Import gallery from snow maps and when it rain"),
-        ),
-        default='OPT_A',
-    )
-
-    import_trees : EnumProperty(
-        name="Import trees",
-        description="Choose which lod to import from trees",
-        items=(
-            ('OPT_A', "None", "Don't import trees"),
-            ('OPT_B', "LOD A", "Import trees from LOD A"),
-            ('OPT_C', "LOD B", "Import trees from LOD B"),
-            ('OPT_D', "LOD C", "Import trees from LOD C"),
-        ),
-        default='OPT_A',
-    )
-
-
-    def execute(self, context):
-        from . import  import_efo
-        print(self.import_trees)
-        import_efo.main(self.filepath, self.files, self.clear_scene, self.import_textures, self.import_trees, self.import_gallery)
-        return {'FINISHED'}
+classes = [
+    TreePathImporterProperties,
+    IDAS_OT_EFO_Import,
+    IDAS_OT_TreePath_Import,
+    IDAS_PT_Gallery_Importer,
+    IDAS_PT_TreePath_Importer,
+]
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportEFO.bl_idname, text="Initial D Arcade Stage Model (.efo)")
+    self.layout.operator(IDAS_OT_EFO_Import.bl_idname, text="Initial D Arcade Stage Model (.efo)")
 
 
 def register():
-    bpy.utils.register_class(ImportEFO)
+    for cls in classes:
+        bpy.utils.register_class(cls)
+    bpy.types.Scene.tree_path_importer_properties = bpy.props.PointerProperty(type=TreePathImporterProperties)
+    
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
 def unregister():
-    bpy.utils.unregister_class(ImportEFO)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
-
-if __name__ == "__main__":
-    register()
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

@@ -1,11 +1,13 @@
+import os
+
 from os import system
 from mathutils import *
 from .Resource import *
-from .Utilities import *
+from ...Utilities import *
 
 class EFO:
     
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         efo_file = open(filepath, 'rb')
         binaryReader = BinaryReader(efo_file)
 
@@ -217,3 +219,13 @@ class EFO:
     def read_sShapeHeader(sSceneDatabase, shapeHeader):
         _sShapeHeader = sShapeHeader(binaryReader)
         sSceneDatabase.shapeHeader[shapeHeader] = _sShapeHeader
+
+    def extract_textures(self, texture_dir):
+
+        for textureImageSignature, textureImage in self._sSceneDatabase.textureImage.items():
+            if textureImageSignature > 0 and textureImage.fileName != None and not os.path.isfile(texture_dir + textureImage.fileName):
+                if not os.path.exists(texture_dir):
+                    os.mkdir(texture_dir)
+                f = open(texture_dir + textureImage.fileName, "wb")
+                f.write(textureImage.file)
+                f.close()
