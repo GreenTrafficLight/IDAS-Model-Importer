@@ -68,13 +68,13 @@ def importEFO(filepath, files, clear_scene, import_textures):
 
                 texture_efo = EFO(texture)
                 texture_dir = path_to_file.replace(efoName, "textures\\")
-                extract_textures(texture_efo, texture_dir)
-                extract_textures(efo, texture_dir)
+                texture_efo.extract_textures(texture_efo, texture_dir)
+                texture_efo.extract_textures(efo, texture_dir)
 
             else:
                 
                 texture_dir = head + "\\" + efoName[:-4] + "_" + "textures\\"
-                extract_textures(efo, texture_dir)
+                texture_efo.extract_textures(efo, texture_dir)
         
         else :
 
