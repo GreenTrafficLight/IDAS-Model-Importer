@@ -21,6 +21,12 @@ class TreePathImporterProperties(bpy.types.PropertyGroup):
         ),
         default='OPT_A',
     )
+
+    import_textures: bpy.props.BoolProperty(
+        name="Import Textures",
+        description="Import textures of the trees",
+        default=False
+    )
     
 class IDAS_PT_TreePath_Importer(bpy.types.Panel):
     bl_label = "Tree Path Importer"
@@ -40,6 +46,8 @@ class IDAS_PT_TreePath_Importer(bpy.types.Panel):
 
         layout.label(text="Tree LOD")
         layout.prop(props, "tree_lod", text= "")
+
+        layout.prop(props, "import_textures")
 
         layout.separator() 
 
